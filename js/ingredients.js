@@ -70,6 +70,60 @@
         return newIngredient;
     }
 
+    // ترجع مكون واحد حسب رقمه التعريفي، أو null لو ما وجدته
+    function getIngredientById(id) {
+        const ingredients = getAllIngredients();
+        const found = ingredients.find(function (item) {
+            return item.id === id;
+        });
+        return found || null;
+    }
+
+    // تعدّل مكون موجود. تستخدم نفس منطق تحويل الوحدات
+    // المستخدم في addIngredient. لو ما وجدت المكون، ترمي خطأ.
+    function updateIngredient(id, name, packageAmount, unit, price) {
+        const ingredients = getAllIngredients();
+        const index = ingredients.findIndex(function (item) {
+            return item.id === id;
+        });
+
+        if (index === -1) {
+            throw new Error('المكون غير موجود: ' + id);
+        }
+
+        // نفس منطق تحويل الوحدات في addIngredient
+        let packageWeightInGrams = Number(packageAmount);
+        let unitType = 'weight';
+
+        if (unit === 'g') {
+            unitType = 'weight';
+        } else if (unit === 'kg') {
+            packageWeightInGrams = packageWeightInGrams * 1000;
+            unitType = 'weight';
+        } else if (unit === 'ml') {
+            unitType = 'volume';
+        } else if (unit === 'l') {
+            packageWeightInGrams = packageWeightInGrams * 1000;
+            unitType = 'volume';
+        } else if (unit === 'piece') {
+            unitType = 'piece';
+        }
+
+        // نحدّث الحقول مع الإبقاء على id و createdAt
+        ingredients[index] = {
+            id: ingredients[index].id,
+            name: name.trim(),
+            packageWeightInGrams: packageWeightInGrams,
+            unitType: unitType,
+            packagePrice: Number(price),
+            createdAt: ingredients[index].createdAt,
+            updatedAt: new Date().toISOString()
+        };
+
+        saveIngredients(ingredients);
+        return ingredients[index];
+    }
+
     // تحذف مكون حسب رقمه التعريفي
     function deleteIngredient(id) {
         const ingredients = getAllIngredients();
@@ -84,6 +138,31 @@
     // تنسيق رقم: نشيل الأصفار الزائدة بعد الفاصلة (حد أقصى منزلتين)
     function formatNumber(num) {
         return Number(num.toFixed(2)).toString();
+    }
+
+    // ترجع الكمية والوحدة المناسبة لعرض المكون للمستخدم
+    // (نفس المنطق المستخدم في formatPackageSize عشان نضمن
+    // أن البطاقة ونموذج التعديل يعرضان نفس الوحدة).
+    function getDisplayUnit(ingredient) {
+        const base = ingredient.packageWeightInGrams;
+        const type = ingredient.unitType;
+
+        if (type === 'piece') {
+            return { amount: base, unit: 'piece' };
+        }
+        if (type === 'weight') {
+            if (base >= 1000) {
+                return { amount: base / 1000, unit: 'kg' };
+            }
+            return { amount: base, unit: 'g' };
+        }
+        if (type === 'volume') {
+            if (base >= 1000) {
+                return { amount: base / 1000, unit: 'l' };
+            }
+            return { amount: base, unit: 'ml' };
+        }
+        return { amount: base, unit: 'g' };
     }
 
     // تختار الوحدة الأنسب لعرض حجم العبوة بشكل مفهوم للمستخدم
@@ -110,8 +189,11 @@
     // (ما نستخدم ES modules حالياً عشان نبقي الكود بسيط للمبتدئ)
     window.tasceerIngredients = {
         getAllIngredients: getAllIngredients,
+        getIngredientById: getIngredientById,
         addIngredient: addIngredient,
+        updateIngredient: updateIngredient,
         deleteIngredient: deleteIngredient,
-        formatPackageSize: formatPackageSize
+        formatPackageSize: formatPackageSize,
+        getDisplayUnit: getDisplayUnit
     };
 })();
