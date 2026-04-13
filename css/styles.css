@@ -22,9 +22,16 @@
 /* الألوان الأساسية للمشروع */
 :root {
     --color-bg: #faf7f2;
+    --color-surface: #ffffff;
     --color-text: #1f2937;
-    --color-primary: #2f6f4e;
     --color-muted: #4b5563;
+    --color-soft: #6b7280;
+    --color-primary: #2f6f4e;
+    --color-primary-hover: #245c3f;
+    --color-danger: #b3261e;
+    --color-danger-hover: #8c1c17;
+    --color-border: #e5e0d5;
+    --radius: 10px;
     --font-arabic: 'Tajawal', system-ui, sans-serif;
 }
 
@@ -45,31 +52,79 @@ body {
 .container {
     max-inline-size: 600px;
     margin-inline: auto;
-    padding-block: 2rem;
-    padding-inline: 1.25rem;
-    text-align: center;
-    min-block-size: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    padding-block: 1.5rem;
+    padding-inline: 1rem;
 }
 
 h1 {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
     font-weight: 700;
     color: var(--color-primary);
-    margin-block-end: 1rem;
+    margin-block-end: 0.75rem;
     line-height: 1.4;
+    text-align: center;
 }
 
-p {
-    font-size: 1.05rem;
+h2 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-block-end: 1rem;
+}
+
+.intro {
+    font-size: 1rem;
     color: var(--color-muted);
-    max-inline-size: 50ch;
+    text-align: center;
+    margin-block-end: 1.5rem;
 }
 
-/* الحد الأدنى لحجم زر اللمس: ٤٤×٤٤ بكسل (للأزرار المستقبلية) */
+/* بطاقة عامة (للنموذج وللمكونات) */
+.card {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding-block: 1.25rem;
+    padding-inline: 1rem;
+    margin-block-end: 1.5rem;
+}
+
+/* === النموذج === */
+.form-section .field {
+    margin-block-end: 1rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-section label {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--color-text);
+    margin-block-end: 0.4rem;
+}
+
+.form-section input,
+.form-section select {
+    inline-size: 100%;
+    min-block-size: 44px;
+    padding-block: 12px;
+    padding-inline: 14px;
+    font-family: inherit;
+    font-size: 1rem;
+    color: var(--color-text);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+}
+
+.form-section input:focus,
+.form-section select:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 1px;
+    border-color: var(--color-primary);
+}
+
+/* === الأزرار === */
 button,
 .btn {
     min-block-size: 44px;
@@ -77,27 +132,127 @@ button,
     font-family: inherit;
     font-size: 1rem;
     cursor: pointer;
+    border: none;
+    border-radius: var(--radius);
 }
 
-/* شاشات أكبر: الأجهزة اللوحية */
-@media (min-width: 600px) {
+.btn-primary {
+    inline-size: 100%;
+    min-block-size: 48px;
+    background-color: var(--color-primary);
+    color: #ffffff;
+    font-weight: 700;
+    padding-block: 12px;
+    padding-inline: 16px;
+    margin-block-start: 0.5rem;
+    transition: background-color 0.15s ease;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background-color: var(--color-primary-hover);
+}
+
+.btn-danger {
+    background-color: transparent;
+    color: var(--color-danger);
+    border: 1px solid var(--color-danger);
+    padding-block: 8px;
+    padding-inline: 14px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.btn-danger:hover,
+.btn-danger:focus {
+    background-color: var(--color-danger);
+    color: #ffffff;
+}
+
+/* === قائمة المكونات === */
+.list-section h2 {
+    margin-block-end: 0.75rem;
+}
+
+.empty-state {
+    color: var(--color-soft);
+    text-align: center;
+    padding-block: 1.5rem;
+    padding-inline: 1rem;
+    background-color: var(--color-surface);
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius);
+}
+
+.ingredient-card {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding-block: 0.9rem;
+    padding-inline: 1rem;
+    margin-block-end: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.ingredient-info {
+    flex: 1;
+    min-inline-size: 0;
+}
+
+.ingredient-name {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-block-end: 0.2rem;
+}
+
+.ingredient-meta {
+    font-size: 0.9rem;
+    color: var(--color-soft);
+}
+
+/* الحذف يجي في بداية السطر (يسار في RTL) باستخدام خصائص logical */
+.ingredient-card .btn-danger {
+    flex-shrink: 0;
+}
+
+/* === شاشات أكبر === */
+@media (min-width: 768px) {
     body {
         font-size: 17px;
     }
-    h1 {
-        font-size: 2.25rem;
-    }
+
     .container {
+        max-inline-size: 720px;
+        padding-block: 2.5rem;
         padding-inline: 2rem;
     }
-}
 
-/* شاشات الديسكتوب */
-@media (min-width: 1024px) {
     h1 {
-        font-size: 2.75rem;
+        font-size: 2rem;
     }
-    p {
-        font-size: 1.15rem;
+
+    h2 {
+        font-size: 1.3rem;
+    }
+
+    .card {
+        padding-block: 1.75rem;
+        padding-inline: 1.75rem;
+    }
+
+    /* في الشاشات الكبيرة نوزع حقول النموذج على عمودين */
+    #add-ingredient-form {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0 1rem;
+    }
+
+    #add-ingredient-form .field:first-child,
+    #add-ingredient-form .btn-primary {
+        grid-column: 1 / -1;
     }
 }

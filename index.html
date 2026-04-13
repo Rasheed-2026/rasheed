@@ -15,9 +15,76 @@
 <body>
     <main class="container">
         <h1>حاسبة التسعير للأسر المنتجة</h1>
-        <p>أهلاً بك! البرنامج تحت الإنشاء حالياً، وقريباً يساعدك تحسب تكلفة منتجاتك وتحدد السعر المناسب.</p>
+        <p class="intro">أضف المكونات التي تستخدمها في منتجاتك. سنستخدمها لاحقاً في حساب تكلفة الوصفات.</p>
+
+        <!-- نموذج إضافة مكون جديد -->
+        <section class="card form-section" aria-labelledby="add-form-title">
+            <h2 id="add-form-title">إضافة مكون جديد</h2>
+
+            <form id="add-ingredient-form" novalidate>
+                <div class="field">
+                    <label for="ingredient-name">اسم المكون</label>
+                    <input
+                        type="text"
+                        id="ingredient-name"
+                        name="ingredient-name"
+                        placeholder="مثال: طحين"
+                        required
+                    >
+                </div>
+
+                <div class="field">
+                    <label for="package-amount">حجم العبوة</label>
+                    <input
+                        type="number"
+                        id="package-amount"
+                        name="package-amount"
+                        placeholder="مثال: 5"
+                        min="0"
+                        step="any"
+                        required
+                    >
+                </div>
+
+                <div class="field">
+                    <label for="package-unit">الوحدة</label>
+                    <select id="package-unit" name="package-unit" required>
+                        <option value="g">جرام</option>
+                        <option value="kg">كيلوجرام</option>
+                        <option value="ml">مليلتر</option>
+                        <option value="l">لتر</option>
+                        <option value="piece">حبة / قطعة</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label for="package-price">سعر العبوة (ريال)</label>
+                    <input
+                        type="number"
+                        id="package-price"
+                        name="package-price"
+                        placeholder="مثال: 25"
+                        min="0"
+                        step="any"
+                        required
+                    >
+                </div>
+
+                <button type="submit" class="btn btn-primary">أضف المكون</button>
+            </form>
+        </section>
+
+        <!-- قائمة المكونات المضافة -->
+        <section class="list-section" aria-labelledby="list-title">
+            <h2 id="list-title">المكونات المضافة</h2>
+            <div id="ingredients-list">
+                <p class="empty-state">لم تضف أي مكونات بعد.</p>
+            </div>
+        </section>
     </main>
 
+    <!-- ترتيب مهم: ingredients.js يجي أول عشان main.js يقدر يستخدم دواله -->
+    <script src="js/ingredients.js"></script>
     <script src="js/main.js"></script>
 </body>
 </html>
