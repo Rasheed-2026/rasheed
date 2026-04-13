@@ -3,66 +3,32 @@
   ملف JavaScript الرئيسي
   ============================================
   هذا الملف يربط الواجهة (HTML) مع منطق
-  المكونات (ingredients.js). مسؤول عن:
-  - عرض قائمة المكونات
-  - استقبال النموذج لإضافة مكون جديد
-  - حذف مكون بعد تأكيد المستخدم
+  المكونات. كل عمليات البيانات (جلب، إضافة،
+  حذف، تنسيق العرض) موجودة في ingredients.js،
+  وهذا الملف فقط يقرأها من window.tasceerIngredients
+  ويتولى DOM والأحداث.
   ============================================
 */
 
 console.log('البرنامج جاهز');
 
-// نقرأ الدوال من الكائن العام اللي عرّفناه في ingredients.js
-const { getAllIngredients, addIngredient, deleteIngredient } = window.tasceerIngredients;
+// مرجع مختصر للدوال المعرّفة في ingredients.js
+// نستخدم اسم مختلف (ingredientsApi) عشان ما يصير تعارض
+// مع أي شي في النطاق العام.
+const ingredientsApi = window.tasceerIngredients;
 
-// === دوال مساعدة للعرض ===
-
-// تختار الوحدة الأنسب لعرض حجم العبوة بشكل مفهوم للمستخدم
-function formatPackageSize(amount, unitType) {
-    if (unitType === 'piece') {
-        // للقطع: نعرض العدد مع كلمة "حبة" أو "قطعة"
-        return amount + ' حبة';
-    }
-
-    if (unitType === 'weight') {
-        // وزن: لو أكبر من كيلو نعرضه بالكيلو، وإلا بالجرام
-        if (amount >= 1000) {
-            return formatNumber(amount / 1000) + ' كيلوجرام';
-        }
-        return formatNumber(amount) + ' جرام';
-    }
-
-    if (unitType === 'volume') {
-        // حجم: لو أكبر من لتر نعرضه باللتر، وإلا بالمليلتر
-        if (amount >= 1000) {
-            return formatNumber(amount / 1000) + ' لتر';
-        }
-        return formatNumber(amount) + ' مليلتر';
-    }
-
-    return amount;
-}
-
-// تنسيق الرقم: نشيل الأصفار الزائدة بعد الفاصلة (مع حد أقصى منزلتين)
-function formatNumber(num) {
-    return Number(num.toFixed(2)).toString();
-}
-
-// تنسيق السعر مع كلمة "ريال"
+// تنسيق السعر مع كلمة "ريال" (تنسيق بسيط خاص بالعرض)
 function formatPrice(price) {
-    return formatNumber(price) + ' ريال';
+    return Number(price.toFixed(2)).toString() + ' ريال';
 }
 
 // === عرض قائمة المكونات ===
-
 function renderIngredients() {
     const listContainer = document.getElementById('ingredients-list');
-    const ingredients = getAllIngredients();
+    const ingredients = ingredientsApi.getAllIngredients();
 
-    // نفرّغ المحتوى السابق قبل ما نعيد البناء
     listContainer.innerHTML = '';
 
-    // لو ما فيه مكونات، نعرض رسالة فاضية
     if (ingredients.length === 0) {
         const empty = document.createElement('p');
         empty.className = 'empty-state';
@@ -71,7 +37,6 @@ function renderIngredients() {
         return;
     }
 
-    // نبني بطاقة لكل مكون
     ingredients.forEach(function (item) {
         const card = document.createElement('div');
         card.className = 'ingredient-card';
@@ -85,14 +50,14 @@ function renderIngredients() {
 
         const meta = document.createElement('div');
         meta.className = 'ingredient-meta';
-        const sizeText = formatPackageSize(item.packageWeightInGrams, item.unitType);
+        const sizeText = ingredientsApi.formatPackageSize(item.packageWeightInGrams, item.unitType);
         const priceText = formatPrice(item.packagePrice);
         meta.textContent = 'العبوة: ' + sizeText + ' — ' + priceText;
 
         info.appendChild(name);
         info.appendChild(meta);
 
-        // زر الحذف — نخزن رقم المكون في data-id عشان نعرفه عند الضغط
+        // زر الحذف — نخزن رقم المكون في data-id
         const deleteBtn = document.createElement('button');
         deleteBtn.type = 'button';
         deleteBtn.className = 'btn btn-danger';
@@ -108,9 +73,7 @@ function renderIngredients() {
 }
 
 // === ربط الأحداث بعد ما تجهز الصفحة ===
-
 document.addEventListener('DOMContentLoaded', function () {
-    // عرض القائمة أول ما تفتح الصفحة
     renderIngredients();
 
     const form = document.getElementById('add-ingredient-form');
@@ -118,9 +81,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // === إضافة مكون جديد ===
     form.addEventListener('submit', function (event) {
+        // نوقف السلوك الافتراضي للمتصفح فوراً قبل أي شي ثاني
         event.preventDefault();
 
-        // نقرأ القيم من الحقول
         const name = document.getElementById('ingredient-name').value.trim();
         const amount = Number(document.getElementById('package-amount').value);
         const unit = document.getElementById('package-unit').value;
@@ -140,21 +103,19 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        // نضيف المكون ونعيد بناء القائمة
-        addIngredient(name, amount, unit, price);
+        ingredientsApi.addIngredient(name, amount, unit, price);
         form.reset();
         renderIngredients();
     });
 
     // === حذف مكون عبر event delegation ===
-    // نستخدم مستمع واحد على الحاوية بدل ما نضيف لكل زر
     listContainer.addEventListener('click', function (event) {
         const target = event.target;
         if (target.matches('.btn-danger')) {
             const id = target.dataset.id;
             const confirmed = confirm('هل أنت متأكد من حذف هذا المكون؟');
             if (confirmed) {
-                deleteIngredient(id);
+                ingredientsApi.deleteIngredient(id);
                 renderIngredients();
             }
         }
