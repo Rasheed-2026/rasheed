@@ -295,15 +295,110 @@ button,
     color: var(--color-soft);
 }
 
-/* ملاحظة صغيرة خافتة أسفل بطاقة الوصفة (ستمتلئ بالمكونات لاحقاً) */
-.item-note {
+/* === قسم مكونات الوصفة داخل البطاقة === */
+.recipe-ingredients {
     inline-size: 100%;
-    margin-block-start: 0.5rem;
-    padding-block-start: 0.5rem;
-    border-block-start: 1px dashed var(--color-border);
-    font-size: 0.8rem;
+    margin-block-start: 0.75rem;
+    padding-block-start: 0.75rem;
+    border-block-start: 1px solid var(--color-border);
+}
+
+.recipe-ingredients__title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-block-end: 0.5rem;
+}
+
+.recipe-ingredients__list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-block-end: 0.75rem;
+}
+
+.recipe-ingredients__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding-block: 0.4rem;
+    padding-inline: 0.6rem;
+    background-color: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+}
+
+.recipe-ingredients__label {
+    font-size: 0.9rem;
+    color: var(--color-text);
+    min-inline-size: 0;
+    flex: 1;
+    word-break: break-word;
+}
+
+.recipe-ingredients__qty {
+    color: var(--color-soft);
+}
+
+.recipe-ingredients__missing {
+    color: var(--color-danger);
+    font-weight: 500;
+}
+
+.recipe-ingredients__empty {
+    font-size: 0.85rem;
     color: var(--color-soft);
     font-style: italic;
+    margin-block-end: 0.75rem;
+}
+
+/* زر صغير محايد للإزالة — ليس أحمر عشان ما يتلخبط مع زر حذف الوصفة */
+.btn-small {
+    min-block-size: 36px;
+    min-inline-size: 36px;
+    padding-block: 6px;
+    padding-inline: 12px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    background-color: transparent;
+    color: var(--color-secondary);
+    border: 1px solid var(--color-border);
+    flex-shrink: 0;
+}
+
+.btn-small:hover,
+.btn-small:focus {
+    background-color: var(--color-secondary);
+    color: #ffffff;
+    border-color: var(--color-secondary);
+}
+
+/* النموذج المصغّر لإضافة مكون — يتكدّس عمودياً على الجوال */
+.recipe-ingredients__form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-block-start: 0.5rem;
+    border-block-start: 1px dashed var(--color-border);
+}
+
+.recipe-ingredients__form select,
+.recipe-ingredients__form input {
+    inline-size: 100%;
+    min-block-size: 44px;
+    padding-block: 10px;
+    padding-inline: 12px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    color: var(--color-text);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+}
+
+.recipe-ingredients__form .btn {
+    inline-size: 100%;
 }
 
 /* مجموعة أزرار البطاقة (تعديل + حذف) */
@@ -365,5 +460,33 @@ button,
     .form-actions .btn-secondary {
         inline-size: auto;
         padding-inline: 1.5rem;
+    }
+
+    /* في الشاشات الكبيرة، نوزع النموذج المصغّر على صف واحد */
+    .recipe-ingredients__form {
+        flex-direction: row;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .recipe-ingredients__form select[data-field="ingredient"] {
+        flex: 2 1 180px;
+        inline-size: auto;
+    }
+
+    .recipe-ingredients__form input[data-field="amount"] {
+        flex: 1 1 100px;
+        inline-size: auto;
+    }
+
+    .recipe-ingredients__form select[data-field="unit"] {
+        flex: 1 1 120px;
+        inline-size: auto;
+    }
+
+    .recipe-ingredients__form .btn {
+        inline-size: auto;
+        flex: 0 0 auto;
+        padding-inline: 1.25rem;
     }
 }

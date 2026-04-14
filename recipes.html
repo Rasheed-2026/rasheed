@@ -104,7 +104,10 @@
         </section>
     </main>
 
-    <!-- ترتيب مهم: recipes.js يجي أول عشان recipes-main.js يقدر يستخدم دواله -->
+    <!-- نحمّل ingredients.js هنا عشان صفحة الوصفات تقدر تقرأ قائمة المكونات
+         (فقط للقراءة عبر window.tasceerIngredients — ما نضيف/نعدّل من هنا) -->
+    <script src="js/ingredients.js"></script>
+    <!-- ترتيب مهم: recipes.js يجي قبل recipes-main.js عشان الأخير يستخدم دواله -->
     <script src="js/recipes.js"></script>
     <script src="js/recipes-main.js"></script>
 </body>
