@@ -896,6 +896,184 @@ button,
     margin-block-start: 0.5rem;
 }
 
+/* =====================================================
+   === صفحة قائمة التسوق ===
+   ===================================================== */
+
+/* صف لكل وصفة مختارة داخل قسم "الوصفات المختارة" */
+.shopping-selected-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding-block: 0.6rem;
+    padding-inline: 0.8rem;
+    background-color: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    margin-block-end: 0.5rem;
+}
+
+.shopping-selected-row__info {
+    flex: 1;
+    min-inline-size: 0;
+    font-size: 0.95rem;
+    color: var(--color-text);
+    font-weight: 500;
+    word-break: break-word;
+}
+
+/* صف لكل مكون في قائمة التسوق المحسوبة */
+.shopping-item-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding-block: 0.6rem;
+    padding-inline: 0.8rem;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    margin-block-end: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.shopping-item-row__name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-text);
+    flex: 1;
+    min-inline-size: 0;
+    word-break: break-word;
+}
+
+.shopping-item-row__meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.1rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.shopping-item-row__qty {
+    font-size: 0.9rem;
+    color: var(--color-soft);
+}
+
+.shopping-item-row__cost {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+/* مكون محذوف — بصري هادئ مع لون خطر */
+.shopping-item-row--deleted .shopping-item-row__name {
+    color: var(--color-danger);
+    font-style: italic;
+}
+.shopping-item-row--deleted .shopping-item-row__cost {
+    color: var(--color-soft);
+}
+
+/* الإجمالي — سطر بارز */
+.shopping-total {
+    margin-block-start: 0.9rem;
+    padding-block-start: 0.75rem;
+    border-block-start: 1px solid var(--color-border);
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+.shopping-total:empty {
+    display: none;
+}
+
+/* صف أزرار نسخ/حفظ */
+.shopping-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-block-start: 1rem;
+}
+
+.shopping-actions .btn {
+    inline-size: 100%;
+}
+
+/* رسالة نجاح صغيرة جنب الأزرار */
+.shopping-feedback {
+    font-size: 0.88rem;
+    color: #1e5c3a;
+    font-weight: 500;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    text-align: center;
+}
+
+.shopping-feedback--visible {
+    opacity: 1;
+}
+
+/* بطاقة لكل قائمة محفوظة */
+.saved-list-card {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding-block: 0.9rem;
+    padding-inline: 1rem;
+    margin-block-end: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.saved-list-card__info {
+    min-inline-size: 0;
+    flex: 1;
+}
+
+.saved-list-card__name {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-block-end: 0.2rem;
+    word-break: break-word;
+}
+
+.saved-list-card__meta {
+    font-size: 0.85rem;
+    color: var(--color-soft);
+}
+
+.saved-list-card__actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+@media (min-width: 600px) {
+    .shopping-actions {
+        flex-direction: row;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    .shopping-actions .btn {
+        inline-size: auto;
+        flex: 0 0 auto;
+    }
+    .saved-list-card {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .saved-list-card__actions {
+        flex-shrink: 0;
+    }
+}
+
 /* === شاشات أكبر === */
 @media (min-width: 768px) {
     body {
