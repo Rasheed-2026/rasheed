@@ -444,29 +444,7 @@ button,
     flex-shrink: 0;
 }
 
-/* === قسم حساب التكلفة داخل بطاقة الوصفة === */
-.recipe-cost {
-    inline-size: 100%;
-    margin-block-start: 0.75rem;
-    padding-block-start: 0.75rem;
-    border-block-start: 1px solid var(--color-border);
-}
-
-.recipe-cost__toggle {
-    inline-size: 100%;
-    min-block-size: 48px;
-    font-weight: 700;
-    color: var(--color-primary);
-    border-color: var(--color-primary);
-}
-
-.recipe-cost__toggle:hover,
-.recipe-cost__toggle:focus {
-    background-color: var(--color-primary);
-    color: #ffffff;
-}
-
-/* لوحة تفاصيل التكلفة */
+/* === لوحة تفاصيل التكلفة (تُستخدم في صفحة التسعير) === */
 .cost-breakdown {
     margin-block-start: 0.75rem;
     padding-block: 1rem;
@@ -556,13 +534,7 @@ button,
     margin-block-end: 0.9rem;
 }
 
-/* بطاقات السعر المقترح — الجوال أولاً: مكدّسة */
-.price-suggestions {
-    display: flex;
-    flex-direction: column;
-    gap: 0.6rem;
-}
-
+/* بطاقة السعر المقترح (نستخدم نفس النمط في صفحة التسعير وفي المقارنة) */
 .price-card {
     background-color: var(--color-surface);
     border: 1px solid var(--color-border);
@@ -606,6 +578,99 @@ button,
     font-style: italic;
     color: var(--color-soft);
     line-height: 1.7;
+}
+
+/* === صف "أضف إلى المقارنة" تحت نتيجة الحساب === */
+.add-to-comparison {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-block-start: 1rem;
+    padding-block-start: 0.75rem;
+    border-block-start: 1px solid var(--color-border);
+    flex-wrap: wrap;
+}
+
+.add-to-comparison input[type="checkbox"] {
+    inline-size: 20px;
+    block-size: 20px;
+    min-inline-size: 20px;
+    min-block-size: 20px;
+    accent-color: var(--color-primary);
+    cursor: pointer;
+}
+
+.add-to-comparison label {
+    font-size: 0.95rem;
+    color: var(--color-text);
+    cursor: pointer;
+}
+
+/* الرسالة القصيرة "تمت الإضافة" — تظهر وتتلاشى */
+.comparison-feedback {
+    font-size: 0.85rem;
+    color: #1e5c3a;
+    font-weight: 500;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.comparison-feedback--visible {
+    opacity: 1;
+}
+
+/* === قسم المقارنة === */
+.comparison-section {
+    margin-block-start: 2rem;
+}
+
+.comparison-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-block-end: 0.9rem;
+    flex-wrap: wrap;
+}
+
+.comparison-header h2 {
+    margin-block-end: 0;
+}
+
+/* شبكة بطاقات المقارنة — مكدّسة على الجوال */
+.comparison-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.comparison-card {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding-block: 0.9rem;
+    padding-inline: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.comparison-card__name {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-block-end: 0.2rem;
+}
+
+.comparison-card__line {
+    font-size: 0.9rem;
+    color: var(--color-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.comparison-card .btn-small {
+    align-self: flex-start;
+    margin-block-start: 0.5rem;
 }
 
 /* === شاشات أكبر === */
@@ -686,14 +751,15 @@ button,
         padding-inline: 1.25rem;
     }
 
-    /* بطاقات الأسعار جنباً إلى جنب على الشاشات الكبيرة */
-    .price-suggestions {
+    /* بطاقات المقارنة جنباً إلى جنب مع التفاف تلقائي */
+    .comparison-grid {
         flex-direction: row;
+        flex-wrap: wrap;
         align-items: stretch;
-        gap: 0.75rem;
     }
 
-    .price-suggestions .price-card {
-        flex: 1 1 0;
+    .comparison-grid .comparison-card {
+        flex: 1 1 240px;
+        min-inline-size: 240px;
     }
 }

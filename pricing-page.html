@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>التسعير — حاسبة التسعير للأسر المنتجة</title>
+
+    <!-- خط عربي من Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- شريط التنقل بين الصفحات -->
+    <nav class="nav" aria-label="القائمة الرئيسية">
+        <a href="index.html" class="nav-link">المكونات</a>
+        <a href="recipes.html" class="nav-link">الوصفات</a>
+        <a href="pricing-page.html" class="nav-link nav-link--active">التسعير</a>
+        <a href="settings.html" class="nav-link">الإعدادات</a>
+    </nav>
+
+    <main class="container">
+        <h1>التسعير</h1>
+        <p class="intro">اختر وصفة وهامش ربح لحساب سعرها، وقارن بين وصفاتك.</p>
+
+        <!-- نموذج اختيار الوصفة والهامش -->
+        <section class="card form-section" aria-labelledby="pricing-form-title">
+            <h2 id="pricing-form-title">احسب تكلفة وصفة</h2>
+
+            <form id="pricing-form" novalidate>
+                <div class="field">
+                    <label for="recipe-select">الوصفة</label>
+                    <select id="recipe-select" name="recipe-select" required>
+                        <option value="" disabled selected>اختر وصفة</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label for="margin-select">هامش الربح</label>
+                    <select id="margin-select" name="margin-select" required>
+                        <option value="20">ربح 20%</option>
+                        <option value="30" selected>ربح 30%</option>
+                        <option value="50">ربح 50%</option>
+                        <option value="custom">مخصص</option>
+                    </select>
+                </div>
+
+                <div class="field" id="custom-margin-field" hidden>
+                    <label for="custom-margin">النسبة المخصصة</label>
+                    <input
+                        type="number"
+                        id="custom-margin"
+                        name="custom-margin"
+                        placeholder="النسبة %"
+                        min="0"
+                        step="1"
+                    >
+                    <p class="field-hint">أدخل النسبة المئوية للربح (مثال: 35)</p>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">احسب</button>
+                </div>
+            </form>
+        </section>
+
+        <!-- منطقة نتيجة الحساب -->
+        <section id="calculation-result" class="cost-breakdown" hidden aria-live="polite"></section>
+
+        <!-- منطقة المقارنة -->
+        <section id="comparison-section" class="comparison-section" hidden aria-labelledby="comparison-title"></section>
+    </main>
+
+    <!-- ترتيب التحميل مهم — كل ملف يعتمد على اللي قبله:
+         ingredients → settings → recipes → pricing → ملف الواجهة -->
+    <script src="js/ingredients.js"></script>
+    <script src="js/settings.js"></script>
+    <script src="js/recipes.js"></script>
+    <script src="js/pricing.js"></script>
+    <script src="js/pricing-page-main.js"></script>
+</body>
+</html>

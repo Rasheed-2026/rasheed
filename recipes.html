@@ -17,6 +17,7 @@
     <nav class="nav" aria-label="القائمة الرئيسية">
         <a href="index.html" class="nav-link">المكونات</a>
         <a href="recipes.html" class="nav-link nav-link--active">الوصفات</a>
+        <a href="pricing-page.html" class="nav-link">التسعير</a>
         <a href="settings.html" class="nav-link">الإعدادات</a>
     </nav>
 
@@ -105,16 +106,11 @@
         </section>
     </main>
 
-    <!-- ترتيب التحميل مهم — كل ملف يعتمد على اللي قبله:
-         1) ingredients.js: نقرأ منه قائمة المكونات
-         2) settings.js: إعدادات التسعير (سعر الساعة، الكهرباء، الغاز)
-         3) recipes.js: طبقة بيانات الوصفات
-         4) pricing.js: معادلات حساب التكلفة (يستخدم الملفات أعلاه)
-         5) recipes-main.js: الواجهة التي تربط كل ما سبق بالـ DOM -->
+    <!-- صفحة الوصفات صارت للإدارة فقط (اسم، حصص، أوقات، مكونات).
+         الحسابات انتقلت لصفحة "التسعير" ولذلك ما نحمّل pricing.js هنا.
+         الترتيب: ingredients.js ثم recipes.js ثم ملف الواجهة. -->
     <script src="js/ingredients.js"></script>
-    <script src="js/settings.js"></script>
     <script src="js/recipes.js"></script>
-    <script src="js/pricing.js"></script>
     <script src="js/recipes-main.js"></script>
 </body>
 </html>
