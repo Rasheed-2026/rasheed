@@ -435,6 +435,15 @@ function renderCalculationResult(calculation) {
     addRow.appendChild(checkbox);
     addRow.appendChild(checkboxLabel);
     addRow.appendChild(feedback);
+
+    // زر تصدير صورة للعميل — على الطرف الآخر من نفس الصف
+    const exportBtn = document.createElement('button');
+    exportBtn.type = 'button';
+    exportBtn.id = 'export-customer-image-btn';
+    exportBtn.className = 'btn btn-secondary export-image-btn';
+    exportBtn.textContent = 'صورة للعميل';
+    addRow.appendChild(exportBtn);
+
     result.appendChild(addRow);
 
     result.hidden = false;
@@ -583,6 +592,90 @@ function performCalculation() {
     };
 }
 
+// === تصدير صورة للعميل ===
+// نملأ القالب المخفي بمعلومات آخر حساب، ثم نستخدم
+// html2canvas لتحويله إلى صورة PNG ونحمّلها تلقائياً.
+function handleExportCustomerImage() {
+    // 1) نتأكد إن فيه حساب فعلي
+    if (!lastCalculated) {
+        alert('لا توجد نتيجة حساب لتصديرها.');
+        return;
+    }
+
+    // 2) نتأكد أن المكتبة تحمّلت
+    if (typeof html2canvas !== 'function') {
+        alert('مكتبة إنشاء الصورة لم تُحمّل. تحقق من اتصالك بالإنترنت.');
+        return;
+    }
+
+    // 3) نطلب من المستخدم رسالة لطيفة (مع قيمة افتراضية)
+    const defaultMsg = 'شكراً لطلبك';
+    const rawMsg = prompt('ما هي الرسالة التي تريد إضافتها للعميل؟', defaultMsg);
+    if (rawMsg === null) {
+        // ألغى الـ prompt — لا نفعل شيئاً
+        return;
+    }
+    const message = rawMsg.trim() || defaultMsg;
+
+    // 4) نملأ القالب ببيانات آخر حساب
+    const template = document.getElementById('customer-image-template');
+    if (!template) {
+        alert('قالب الصورة غير موجود.');
+        return;
+    }
+
+    const nameEl = template.querySelector('.customer-image-template__recipe-name');
+    const priceEl = template.querySelector('.customer-image-template__price-value');
+    const perEl = template.querySelector('.customer-image-template__per-serving-value');
+    const servingsNoteEl = template.querySelector('.customer-image-template__servings-note');
+    const msgEl = template.querySelector('.customer-image-template__message');
+
+    nameEl.textContent = lastCalculated.recipeName;
+    priceEl.textContent = pricing.formatSAR(lastCalculated.sellingPrice);
+    if (lastCalculated.perServing === null) {
+        perEl.textContent = '—';
+    } else {
+        perEl.textContent = pricing.formatSAR(lastCalculated.perServing);
+    }
+    const servings = Number(lastCalculated.recipe.servings) || 0;
+    servingsNoteEl.textContent = servings > 0 ? '(' + servings + ' حصة)' : '';
+    msgEl.textContent = message;
+
+    // 5) نرسم القالب ونحوّله إلى ملف PNG ونحمّله
+    html2canvas(template, { backgroundColor: null, scale: 2 }).then(function (canvas) {
+        canvas.toBlob(function (blob) {
+            if (!blob) {
+                alert('حدث خطأ أثناء إنشاء الصورة. حاول مرة أخرى.');
+                return;
+            }
+            const url = URL.createObjectURL(blob);
+            const safeName = sanitizeFilename(lastCalculated.recipeName);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'تسعير-' + safeName + '.png';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            // تنظيف: نحرر الذاكرة بعد مهلة قصيرة
+            setTimeout(function () {
+                URL.revokeObjectURL(url);
+            }, 1000);
+        }, 'image/png');
+    }).catch(function () {
+        alert('حدث خطأ أثناء إنشاء الصورة. حاول مرة أخرى.');
+    });
+}
+
+// تنظيف اسم الملف: نحذف الأحرف اللي قد تكسر أسماء الملفات
+// ونستبدل المسافات بشرطات، عشان اسم التحميل يكون سليماً.
+function sanitizeFilename(name) {
+    const safe = String(name || 'وصفة')
+        .replace(/[\\/:*?"<>|]/g, '')
+        .replace(/\s+/g, '-')
+        .trim();
+    return safe || 'وصفة';
+}
+
 // === ربط الأحداث بعد تجهيز الصفحة ===
 document.addEventListener('DOMContentLoaded', function () {
     const count = populateRecipeSelect();
@@ -631,6 +724,10 @@ document.addEventListener('DOMContentLoaded', function () {
     // لأنه يُعاد بناؤه في كل حساب جديد.
     resultSection.addEventListener('click', function (event) {
         const target = event.target;
+        if (target && target.id === 'export-customer-image-btn') {
+            handleExportCustomerImage();
+            return;
+        }
         if (target && target.id === 'toggle-breakdown-btn') {
             const container = document.getElementById('breakdown-container');
             if (!container) {

@@ -71,7 +71,29 @@
 
         <!-- منطقة المقارنة -->
         <section id="comparison-section" class="comparison-section" hidden aria-labelledby="comparison-title"></section>
+
+        <!-- قالب مخفي يستخدمه html2canvas لتوليد الصورة.
+             موضوع خارج الشاشة عبر CSS (ليس display:none عشان
+             المكتبة تقدر ترسمه). JS يملأ محتواه عند التصدير. -->
+        <div id="customer-image-template" class="customer-image-template" aria-hidden="true">
+            <div class="customer-image-template__inner">
+                <h2 class="customer-image-template__recipe-name"></h2>
+                <div class="customer-image-template__price-main">
+                    <div class="customer-image-template__price-label">السعر</div>
+                    <div class="customer-image-template__price-value"></div>
+                </div>
+                <div class="customer-image-template__per-serving">
+                    <div class="customer-image-template__per-serving-label">سعر الحصة الواحدة</div>
+                    <div class="customer-image-template__per-serving-value"></div>
+                    <div class="customer-image-template__servings-note"></div>
+                </div>
+                <div class="customer-image-template__message"></div>
+            </div>
+        </div>
     </main>
+
+    <!-- مكتبة html2canvas من CDN — لتحويل العنصر إلى صورة PNG -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <!-- ترتيب التحميل مهم — كل ملف يعتمد على اللي قبله:
          ingredients → settings → recipes → pricing → ملف الواجهة -->
