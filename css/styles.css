@@ -126,6 +126,38 @@ h2 {
     border-color: var(--color-primary);
 }
 
+/* شرح صغير تحت كل حقل في صفحة الإعدادات */
+.field-hint {
+    margin-block-start: 0.4rem;
+    font-size: 0.85rem;
+    color: var(--color-soft);
+    line-height: 1.5;
+}
+
+/* رسالة حالة تحت نموذج الإعدادات (نجاح / خطأ) */
+.status-message {
+    margin-block-start: 1rem;
+    padding-block: 0.75rem;
+    padding-inline: 1rem;
+    border-radius: var(--radius);
+    font-size: 0.95rem;
+    font-weight: 500;
+    text-align: center;
+    border: 1px solid transparent;
+}
+
+.status-message--success {
+    background-color: #e8f5ee;
+    color: #1e5c3a;
+    border-color: #b7dcc4;
+}
+
+.status-message--error {
+    background-color: #fdecea;
+    color: #8c1c17;
+    border-color: #f2c2bf;
+}
+
 /* === الأزرار === */
 button,
 .btn {
