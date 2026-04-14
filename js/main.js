@@ -40,17 +40,17 @@ function renderIngredients() {
 
     ingredients.forEach(function (item) {
         const card = document.createElement('div');
-        card.className = 'ingredient-card';
+        card.className = 'item-card';
 
         const info = document.createElement('div');
-        info.className = 'ingredient-info';
+        info.className = 'item-info';
 
         const name = document.createElement('div');
-        name.className = 'ingredient-name';
+        name.className = 'item-name';
         name.textContent = item.name;
 
         const meta = document.createElement('div');
-        meta.className = 'ingredient-meta';
+        meta.className = 'item-meta';
         const sizeText = ingredientsApi.formatPackageSize(item.packageWeightInGrams, item.unitType);
         const priceText = formatPrice(item.packagePrice);
         meta.textContent = 'العبوة: ' + sizeText + ' — ' + priceText;

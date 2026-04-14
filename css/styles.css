@@ -206,7 +206,49 @@ button,
     display: none !important;
 }
 
-/* === قائمة المكونات === */
+/* === شريط التنقل بين الصفحات === */
+.nav {
+    background-color: var(--color-surface);
+    border-block-end: 1px solid var(--color-border);
+    display: flex;
+    justify-content: center;
+    gap: 0.25rem;
+    padding-block: 0.5rem;
+    padding-inline: 0.5rem;
+}
+
+.nav-link {
+    min-block-size: 44px;
+    min-inline-size: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding-block: 0.5rem;
+    padding-inline: 1.1rem;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--color-muted);
+    text-decoration: none;
+    border-radius: var(--radius);
+    border: 1px solid transparent;
+}
+
+.nav-link:hover,
+.nav-link:focus {
+    color: var(--color-primary);
+    background-color: var(--color-bg);
+}
+
+.nav-link--active {
+    color: var(--color-primary);
+    font-weight: 700;
+    background-color: var(--color-bg);
+    border-color: var(--color-primary);
+    border-block-end: 3px solid var(--color-primary);
+}
+
+/* === قائمة المكونات والوصفات === */
 .list-section h2 {
     margin-block-end: 0.75rem;
 }
@@ -221,7 +263,8 @@ button,
     border-radius: var(--radius);
 }
 
-.ingredient-card {
+/* بطاقة عنصر عامة: تستخدمها المكونات والوصفات */
+.item-card {
     background-color: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
@@ -232,23 +275,35 @@ button,
     align-items: center;
     justify-content: space-between;
     gap: 0.75rem;
+    flex-wrap: wrap;
 }
 
-.ingredient-info {
+.item-info {
     flex: 1;
     min-inline-size: 0;
 }
 
-.ingredient-name {
+.item-name {
     font-size: 1.05rem;
     font-weight: 700;
     color: var(--color-text);
     margin-block-end: 0.2rem;
 }
 
-.ingredient-meta {
+.item-meta {
     font-size: 0.9rem;
     color: var(--color-soft);
+}
+
+/* ملاحظة صغيرة خافتة أسفل بطاقة الوصفة (ستمتلئ بالمكونات لاحقاً) */
+.item-note {
+    inline-size: 100%;
+    margin-block-start: 0.5rem;
+    padding-block-start: 0.5rem;
+    border-block-start: 1px dashed var(--color-border);
+    font-size: 0.8rem;
+    color: var(--color-soft);
+    font-style: italic;
 }
 
 /* مجموعة أزرار البطاقة (تعديل + حذف) */

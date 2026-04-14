@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الوصفات — حاسبة التسعير للأسر المنتجة</title>
+
+    <!-- خط عربي من Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- شريط التنقل بين الصفحات -->
+    <nav class="nav" aria-label="القائمة الرئيسية">
+        <a href="index.html" class="nav-link">المكونات</a>
+        <a href="recipes.html" class="nav-link nav-link--active">الوصفات</a>
+    </nav>
+
+    <main class="container">
+        <h1>الوصفات</h1>
+        <p class="intro">أنشئ وصفاتك واحفظها لتسعيرها لاحقاً.</p>
+
+        <!-- نموذج إضافة وصفة جديدة -->
+        <section class="card form-section" aria-labelledby="recipe-form-title">
+            <h2 id="recipe-form-title">إضافة وصفة جديدة</h2>
+
+            <form id="add-recipe-form" novalidate>
+                <div class="field">
+                    <label for="recipe-name">اسم الوصفة</label>
+                    <input
+                        type="text"
+                        id="recipe-name"
+                        name="recipe-name"
+                        placeholder="مثال: كيكة شوكولاتة"
+                        required
+                    >
+                </div>
+
+                <div class="field">
+                    <label for="recipe-servings">عدد الحصص</label>
+                    <input
+                        type="number"
+                        id="recipe-servings"
+                        name="recipe-servings"
+                        placeholder="مثال: 12"
+                        min="1"
+                        step="1"
+                        required
+                    >
+                </div>
+
+                <div class="field">
+                    <label for="recipe-prep-time">وقت التحضير (بالدقائق)</label>
+                    <input
+                        type="number"
+                        id="recipe-prep-time"
+                        name="recipe-prep-time"
+                        placeholder="مثال: 20"
+                        min="0"
+                        step="1"
+                        required
+                    >
+                </div>
+
+                <div class="field">
+                    <label for="recipe-cook-time">وقت الطبخ (بالدقائق)</label>
+                    <input
+                        type="number"
+                        id="recipe-cook-time"
+                        name="recipe-cook-time"
+                        placeholder="مثال: 40"
+                        min="0"
+                        step="1"
+                        required
+                    >
+                </div>
+
+                <div class="field">
+                    <label for="recipe-energy">مصدر الطاقة</label>
+                    <select id="recipe-energy" name="recipe-energy" required>
+                        <option value="none">بدون</option>
+                        <option value="electric">كهرباء</option>
+                        <option value="gas">غاز</option>
+                        <option value="both">كهرباء وغاز</option>
+                    </select>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" id="recipe-submit-btn" class="btn btn-primary">أضف الوصفة</button>
+                    <button type="button" id="recipe-cancel-btn" class="btn btn-secondary" hidden>إلغاء</button>
+                </div>
+            </form>
+        </section>
+
+        <!-- قائمة الوصفات المحفوظة -->
+        <section class="list-section" aria-labelledby="recipes-list-title">
+            <h2 id="recipes-list-title">الوصفات المحفوظة</h2>
+            <div id="recipes-list">
+                <p class="empty-state">لم تضف أي وصفات بعد.</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- ترتيب مهم: recipes.js يجي أول عشان recipes-main.js يقدر يستخدم دواله -->
+    <script src="js/recipes.js"></script>
+    <script src="js/recipes-main.js"></script>
+</body>
+</html>
