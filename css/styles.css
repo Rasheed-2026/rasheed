@@ -303,6 +303,14 @@ button,
     color: var(--color-soft);
 }
 
+/* زر تبديل إظهار قسم المكونات — محايد بعرض كامل على الجوال */
+.toggle-ingredients-btn {
+    inline-size: 100%;
+    min-block-size: 44px;
+    margin-block-start: 0.75rem;
+    font-weight: 500;
+}
+
 /* === قسم مكونات الوصفة داخل البطاقة === */
 .recipe-ingredients {
     inline-size: 100%;

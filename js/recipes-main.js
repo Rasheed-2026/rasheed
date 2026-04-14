@@ -16,6 +16,11 @@ const ingredientsApi = window.tasceerIngredients;
 // متغير حالة: null = وضع الإضافة، غير ذلك = رقم الوصفة قيد التعديل
 let editingRecipeId = null;
 
+// حالة فتح/إغلاق قسم المكونات لكل وصفة.
+// المفتاح = id الوصفة، القيمة = true (مفتوح) أو false/غير موجود (مغلق).
+// في الذاكرة فقط — عند إعادة تحميل الصفحة كل الأقسام تبدأ مغلقة.
+const openIngredientsByRecipe = {};
+
 // تنسيق رقم: نشيل الأصفار الزائدة بعد الفاصلة (حد أقصى منزلتين)
 function formatNumber(num) {
     return Number(num.toFixed(2)).toString();
@@ -153,8 +158,21 @@ function renderRecipes() {
         card.appendChild(info);
         card.appendChild(actions);
 
-        // === القسم الفرعي: مكونات الوصفة ===
+        // === القسم الفرعي: مكونات الوصفة (قابل للطي) ===
+        const isOpen = openIngredientsByRecipe[recipe.id] === true;
+
+        // زر التبديل بديل العنوان القديم
+        const toggleBtn = document.createElement('button');
+        toggleBtn.type = 'button';
+        toggleBtn.className = 'btn btn-secondary toggle-ingredients-btn';
+        toggleBtn.dataset.action = 'toggle-ingredients';
+        toggleBtn.dataset.recipeId = recipe.id;
+        // السهم في نهاية النص يتبدّل حسب حالة الفتح
+        toggleBtn.textContent = 'المكونات ' + (isOpen ? '▴' : '▾');
+        card.appendChild(toggleBtn);
+
         const ingSection = buildIngredientsSection(recipe, allIngredients);
+        ingSection.hidden = !isOpen;
         card.appendChild(ingSection);
 
         listContainer.appendChild(card);
@@ -168,10 +186,7 @@ function buildIngredientsSection(recipe, allIngredients) {
     const section = document.createElement('div');
     section.className = 'recipe-ingredients';
 
-    const heading = document.createElement('h4');
-    heading.className = 'recipe-ingredients__title';
-    heading.textContent = 'المكونات';
-    section.appendChild(heading);
+    // العنوان القديم أُزيل — زر التبديل أعلى القسم يؤدي دوره.
 
     // قائمة المكونات المضافة لهذه الوصفة
     const list = document.createElement('div');
@@ -446,6 +461,17 @@ document.addEventListener('DOMContentLoaded', function () {
         const card = target.closest('.item-card');
         const recipeId = card ? card.dataset.recipeId : null;
 
+        // === تبديل ظهور قسم المكونات ===
+        if (action === 'toggle-ingredients') {
+            const id = target.dataset.recipeId;
+            if (!id) {
+                return;
+            }
+            openIngredientsByRecipe[id] = !openIngredientsByRecipe[id];
+            renderRecipes();
+            return;
+        }
+
         // === تعديل الوصفة (من الأزرار الرئيسية) ===
         if (action === 'edit') {
             enterEditMode(target.dataset.id);
@@ -461,6 +487,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (editingRecipeId === id) {
                     exitEditMode();
                 }
+                // ننظّف حالة الفتح المرتبطة بهذه الوصفة
+                delete openIngredientsByRecipe[id];
                 recipesApi.deleteRecipe(id);
                 renderRecipes();
             }
@@ -501,6 +529,8 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             recipesApi.addIngredientToRecipe(recipeId, ingredientId, amount, unit);
+            // نبقي قسم المكونات مفتوحاً بعد إعادة الرسم ليشوف المستخدم إضافته
+            openIngredientsByRecipe[recipeId] = true;
             renderRecipes();
             return;
         }
@@ -517,6 +547,8 @@ document.addEventListener('DOMContentLoaded', function () {
             const confirmed = confirm('هل تريد إزالة هذا المكون من الوصفة؟');
             if (confirmed) {
                 recipesApi.removeIngredientFromRecipe(recipeId, ingredientId);
+                // نبقي القسم مفتوحاً بعد الإزالة
+                openIngredientsByRecipe[recipeId] = true;
                 renderRecipes();
             }
             return;
