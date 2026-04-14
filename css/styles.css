@@ -452,6 +452,17 @@ button,
         flex: 1 1 0;
         min-inline-size: 0;
     }
+
+    /* نحجز ارتفاعاً كافياً لسطرين لكل ليبل عشان
+       الحقول الثلاثة تبدأ من نفس الخط الأفقي حتى لو
+       كان أحد الليبلات يلتف إلى سطر ثاني.
+       align-items: flex-end يخلي النص يرسو في الأسفل،
+       فتلتقي كل الليبلات عند نفس النقطة تحتها. */
+    .pricing-fields-row .field label {
+        display: flex;
+        align-items: flex-end;
+        min-block-size: 2.8em;
+    }
 }
 
 .pricing-values-subsection__title {
