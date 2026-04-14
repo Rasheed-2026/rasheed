@@ -444,6 +444,7 @@ button,
 @media (min-width: 600px) {
     .pricing-fields-row {
         flex-direction: row;
+        align-items: flex-start;
         gap: 1rem;
     }
 
