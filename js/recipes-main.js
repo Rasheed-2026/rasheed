@@ -16,6 +16,13 @@ const ingredientsApi = window.tasceerIngredients;
 // متغير حالة: null = وضع الإضافة، غير ذلك = رقم الوصفة قيد التعديل
 let editingRecipeId = null;
 
+// سجل بسيط في الذاكرة: أي بطاقات "احسب التكلفة" مفتوحة حالياً.
+// ملاحظة: هذي الحالة مؤقتة في الذاكرة فقط — لو أعاد المستخدم
+// تحميل الصفحة، كل البطاقات تبدأ مغلقة. كمان نفضيها بالكامل
+// عند كل re-render لتبسيط السلوك (أي تعديل على الوصفة أو
+// المكونات أو الإعدادات => كل التفاصيل تنطوي).
+let openCostBreakdowns = {};
+
 // تنسيق رقم: نشيل الأصفار الزائدة بعد الفاصلة (حد أقصى منزلتين)
 function formatNumber(num) {
     return Number(num.toFixed(2)).toString();
@@ -63,6 +70,13 @@ function formatEnergySource(value) {
 
 // === عرض قائمة الوصفات ===
 function renderRecipes() {
+    // نغلق كل لوحات التكلفة عند أي إعادة رسم.
+    // هذا القرار مقصود لتبسيط السلوك: أي تعديل على
+    // الوصفة أو مكوناتها يجعل الأرقام السابقة قديمة،
+    // فالأفضل إعادة الحساب بضغطة واحدة بدل محاولة مزامنة
+    // الأرقام القديمة مع التغييرات.
+    openCostBreakdowns = {};
+
     const listContainer = document.getElementById('recipes-list');
     const recipes = recipesApi.getAllRecipes();
 
@@ -139,8 +153,268 @@ function renderRecipes() {
         const ingSection = buildIngredientsSection(recipe, allIngredients);
         card.appendChild(ingSection);
 
+        // === القسم الفرعي: احسب التكلفة ===
+        const costSection = buildCostSection(recipe);
+        card.appendChild(costSection);
+
         listContainer.appendChild(card);
     });
+}
+
+// يبني قسم "احسب التكلفة" داخل البطاقة:
+// زر كبير + حاوية تفاصيل تبدأ مخفية.
+// التفاصيل نفسها تُولد فقط عند الضغط على الزر.
+function buildCostSection(recipe) {
+    const section = document.createElement('div');
+    section.className = 'recipe-cost';
+
+    const toggleBtn = document.createElement('button');
+    toggleBtn.type = 'button';
+    toggleBtn.className = 'btn btn-secondary recipe-cost__toggle';
+    toggleBtn.textContent = 'احسب التكلفة';
+    toggleBtn.dataset.action = 'toggle-cost';
+
+    const breakdown = document.createElement('div');
+    breakdown.className = 'cost-breakdown';
+    breakdown.hidden = true;
+
+    section.appendChild(toggleBtn);
+    section.appendChild(breakdown);
+    return section;
+}
+
+// يبني كامل محتوى "لوحة التفاصيل" لوصفة معينة.
+// يرجع عنصر DocumentFragment نعلقه داخل .cost-breakdown.
+// هنا تعيش كل المنطق التعليمي: نعرض كل خطوة حسابية بوضوح
+// عشان المستخدم يفهم من وين جاء كل رقم.
+function buildCostBreakdownContent(recipe) {
+    const pricing = window.tasceerPricing;
+    const settings = window.tasceerSettings.getSettings();
+    const fragment = document.createDocumentFragment();
+
+    // 1) التحقق من الشروط المسبقة — نعرض رسالة عربية
+    // لطيفة داخل اللوحة بدل ما نرمي alert أو نكسر الصفحة.
+    const entries = recipe.ingredients || [];
+    if (entries.length === 0) {
+        fragment.appendChild(buildInlineMessage(
+            'لا يمكن حساب التكلفة بدون مكونات. أضف مكوناً واحداً على الأقل.'
+        ));
+        return fragment;
+    }
+    if (!(Number(recipe.servings) > 0)) {
+        fragment.appendChild(buildInlineMessage(
+            'عدد الحصص غير صحيح. عدّل الوصفة أولاً.'
+        ));
+        return fragment;
+    }
+
+    // 2) نفحص هل فيه مكونات محذوفة — لو نعم، نعرض تنبيه
+    // أصفر فوق، لكن نكمل الحساب مع تخطي المحذوفات.
+    const hasMissing = entries.some(function (entry) {
+        return !ingredientsApi.getIngredientById(entry.ingredientId);
+    });
+    if (hasMissing) {
+        const warn = document.createElement('div');
+        warn.className = 'warning-note';
+        warn.textContent = 'تنبيه: بعض المكونات تم حذفها من قائمة المكونات ولم تُحسب في التكلفة.';
+        fragment.appendChild(warn);
+    }
+
+    // 3) الحسابات الفعلية عبر طبقة pricing
+    const cost = pricing.calculateTotalCost(recipe, settings);
+    const prices = pricing.calculateSellingPrices(cost.total, recipe.servings);
+
+    // === القسم أ: كيف حسبنا التكلفة الفعلية؟ ===
+    const sectionA = document.createElement('div');
+    sectionA.className = 'cost-section';
+
+    const titleA = document.createElement('h4');
+    titleA.className = 'cost-section__title';
+    titleA.textContent = 'كيف حسبنا التكلفة الفعلية؟';
+    sectionA.appendChild(titleA);
+
+    // --- صف: تكلفة المواد الخام ---
+    sectionA.appendChild(buildCostRow('تكلفة المواد الخام', pricing.formatSAR(cost.materials)));
+
+    // تفاصيل كل مكون وكيف ساهم في تكلفة المواد
+    const materialsDetails = document.createElement('div');
+    materialsDetails.className = 'cost-row__details';
+    entries.forEach(function (entry) {
+        const ingredient = ingredientsApi.getIngredientById(entry.ingredientId);
+        if (!ingredient) {
+            const miss = document.createElement('div');
+            miss.textContent = '• (مكون محذوف) — لم يُحسب';
+            materialsDetails.appendChild(miss);
+            return;
+        }
+        const contribution = (ingredient.packagePrice / ingredient.packageWeightInGrams) * Number(entry.quantity);
+        const line = document.createElement('div');
+        // مثال: "طحين: 200 جرام × (5 ريال ÷ 1000 جرام) = 1.00 ريال"
+        line.textContent =
+            '• ' + ingredient.name + ': ' +
+            formatQuantityForDisplay(ingredient, entry.quantity) +
+            ' × (' + pricing.formatSAR(ingredient.packagePrice) +
+            ' ÷ ' + ingredient.packageWeightInGrams + ' ' + baseUnitName(ingredient) + ')' +
+            ' = ' + pricing.formatSAR(contribution);
+        materialsDetails.appendChild(line);
+    });
+    sectionA.appendChild(materialsDetails);
+
+    // --- صف: تكلفة الطاقة ---
+    sectionA.appendChild(buildCostRow('تكلفة الطاقة', pricing.formatSAR(cost.energy)));
+    const energyDetails = document.createElement('div');
+    energyDetails.className = 'cost-row__details';
+    energyDetails.textContent = buildEnergyExplainer(recipe, settings);
+    sectionA.appendChild(energyDetails);
+
+    // --- صف: قيمة وقتك ---
+    sectionA.appendChild(buildCostRow('قيمة وقتك', pricing.formatSAR(cost.time)));
+    const timeDetails = document.createElement('div');
+    timeDetails.className = 'cost-row__details';
+    const totalMinutes = Number(recipe.prepTimeMinutes) + Number(recipe.cookTimeMinutes);
+    timeDetails.textContent =
+        totalMinutes + ' دقيقة × (' + pricing.formatSAR(settings.hourlyRate) + ' ÷ 60 دقيقة)';
+    sectionA.appendChild(timeDetails);
+
+    // --- صف الإجمالي (مميّز) ---
+    const totalRow = document.createElement('div');
+    totalRow.className = 'cost-row cost-total';
+    const totalLabel = document.createElement('span');
+    totalLabel.className = 'cost-row__label';
+    totalLabel.textContent = 'الإجمالي الفعلي';
+    const totalValue = document.createElement('span');
+    totalValue.className = 'cost-row__value';
+    totalValue.textContent = pricing.formatSAR(cost.total);
+    totalRow.appendChild(totalLabel);
+    totalRow.appendChild(totalValue);
+    sectionA.appendChild(totalRow);
+
+    fragment.appendChild(sectionA);
+
+    // === القسم ب: اقتراح السعر ===
+    const sectionB = document.createElement('div');
+    sectionB.className = 'cost-section';
+
+    const titleB = document.createElement('h4');
+    titleB.className = 'cost-section__title';
+    titleB.textContent = 'السعر المقترح للبيع';
+    sectionB.appendChild(titleB);
+
+    const cards = document.createElement('div');
+    cards.className = 'price-suggestions';
+
+    cards.appendChild(buildPriceCard('ربح 20%', prices.margin20, false));
+    cards.appendChild(buildPriceCard('ربح 30%', prices.margin30, true));
+    cards.appendChild(buildPriceCard('ربح 50%', prices.margin50, false));
+
+    sectionB.appendChild(cards);
+    fragment.appendChild(sectionB);
+
+    // === القسم ج: تذييل تعليمي ===
+    const footer = document.createElement('p');
+    footer.className = 'educational-footer';
+    footer.textContent =
+        'هذه الأرقام تقديرية. عدّل إعدادات التسعير (قيمة ساعتك، تعرفة الكهرباء، سعر الغاز) لتكون أدق لوضعك.';
+    fragment.appendChild(footer);
+
+    return fragment;
+}
+
+// عنصر رسالة عربية داخل لوحة التفاصيل (استبدال alert)
+function buildInlineMessage(text) {
+    const msg = document.createElement('p');
+    msg.className = 'cost-inline-message';
+    msg.textContent = text;
+    return msg;
+}
+
+// صف موحّد: اسم على الجهة + قيمة على الأخرى
+function buildCostRow(label, value) {
+    const row = document.createElement('div');
+    row.className = 'cost-row';
+
+    const l = document.createElement('span');
+    l.className = 'cost-row__label';
+    l.textContent = label;
+
+    const v = document.createElement('span');
+    v.className = 'cost-row__value';
+    v.textContent = value;
+
+    row.appendChild(l);
+    row.appendChild(v);
+    return row;
+}
+
+// بطاقة لكل هامش ربح (20/30/50)
+function buildPriceCard(title, priceObj, recommended) {
+    const card = document.createElement('div');
+    card.className = 'price-card' + (recommended ? ' price-card--recommended' : '');
+
+    const h = document.createElement('div');
+    h.className = 'price-card__title';
+    h.textContent = title;
+    card.appendChild(h);
+
+    const total = document.createElement('div');
+    total.className = 'price-card__line';
+    total.textContent = 'السعر الكامل: ' + window.tasceerPricing.formatSAR(priceObj.total);
+    card.appendChild(total);
+
+    const per = document.createElement('div');
+    per.className = 'price-card__line';
+    if (priceObj.perServing === null) {
+        per.textContent = 'سعر الحصة الواحدة: —';
+    } else {
+        per.textContent = 'سعر الحصة الواحدة: ' + window.tasceerPricing.formatSAR(priceObj.perServing);
+    }
+    card.appendChild(per);
+
+    if (recommended) {
+        const hint = document.createElement('div');
+        hint.className = 'price-card__hint';
+        hint.textContent = 'الخيار الموصى به للبدء';
+        card.appendChild(hint);
+    }
+
+    return card;
+}
+
+// اسم الوحدة الأساسية لعرضها في سطر تفاصيل المواد
+function baseUnitName(ingredient) {
+    if (ingredient.unitType === 'piece') {
+        return 'حبة';
+    }
+    if (ingredient.unitType === 'volume') {
+        return 'مليلتر';
+    }
+    return 'جرام';
+}
+
+// يبني جملة شارحة لسطر الطاقة حسب المصدر المختار
+function buildEnergyExplainer(recipe, settings) {
+    const source = recipe.energySource;
+    const cook = Number(recipe.cookTimeMinutes) || 0;
+    const kw = window.tasceerPricing.ELECTRIC_OVEN_KW;
+    const rateSAR = (Number(settings.electricityRate) / 100).toFixed(2);
+
+    if (source === 'none' || cook === 0) {
+        return 'لم يتم اختيار مصدر طاقة لهذه الوصفة (أو وقت الطبخ صفر).';
+    }
+    if (source === 'electric') {
+        return 'الفرن الكهربائي (' + kw + ' كيلوواط) × ' + cook + ' دقيقة × ' +
+            rateSAR + ' ريال لكل كيلوواط ساعة';
+    }
+    if (source === 'gas') {
+        return 'الغاز لمدة ' + cook + ' دقيقة، بناءً على سعر أسطوانة ' +
+            window.tasceerPricing.formatSAR(settings.gasCylinderPrice) +
+            ' تدوم حوالي ' + window.tasceerPricing.GAS_CYLINDER_BURN_HOURS + ' ساعة';
+    }
+    if (source === 'both') {
+        return 'نصف الوقت كهرباء (' + (cook / 2) + ' دقيقة) ونصفه غاز (' +
+            (cook / 2) + ' دقيقة)';
+    }
+    return '';
 }
 
 // يبني قسم مكونات الوصفة داخل البطاقة:
@@ -380,6 +654,36 @@ document.addEventListener('DOMContentLoaded', function () {
         // نحصل على بطاقة الوصفة الأم لأي زر داخلها
         const card = target.closest('.item-card');
         const recipeId = card ? card.dataset.recipeId : null;
+
+        // === تبديل عرض لوحة التكلفة ===
+        if (action === 'toggle-cost') {
+            if (!recipeId) {
+                return;
+            }
+            const recipe = recipesApi.getRecipeById(recipeId);
+            if (!recipe) {
+                return;
+            }
+            const breakdown = card.querySelector('.cost-breakdown');
+            const btn = target;
+            const isOpen = openCostBreakdowns[recipeId] === true;
+
+            if (isOpen) {
+                // إغلاق: نفرّغ المحتوى عشان ما يبقى محسوب بأرقام قديمة
+                breakdown.innerHTML = '';
+                breakdown.hidden = true;
+                btn.textContent = 'احسب التكلفة';
+                openCostBreakdowns[recipeId] = false;
+            } else {
+                // فتح: نحسب ونعرض
+                breakdown.innerHTML = '';
+                breakdown.appendChild(buildCostBreakdownContent(recipe));
+                breakdown.hidden = false;
+                btn.textContent = 'إخفاء التفاصيل';
+                openCostBreakdowns[recipeId] = true;
+            }
+            return;
+        }
 
         // === تعديل الوصفة (من الأزرار الرئيسية) ===
         if (action === 'edit') {

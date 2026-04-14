@@ -105,11 +105,16 @@
         </section>
     </main>
 
-    <!-- نحمّل ingredients.js هنا عشان صفحة الوصفات تقدر تقرأ قائمة المكونات
-         (فقط للقراءة عبر window.tasceerIngredients — ما نضيف/نعدّل من هنا) -->
+    <!-- ترتيب التحميل مهم — كل ملف يعتمد على اللي قبله:
+         1) ingredients.js: نقرأ منه قائمة المكونات
+         2) settings.js: إعدادات التسعير (سعر الساعة، الكهرباء، الغاز)
+         3) recipes.js: طبقة بيانات الوصفات
+         4) pricing.js: معادلات حساب التكلفة (يستخدم الملفات أعلاه)
+         5) recipes-main.js: الواجهة التي تربط كل ما سبق بالـ DOM -->
     <script src="js/ingredients.js"></script>
-    <!-- ترتيب مهم: recipes.js يجي قبل recipes-main.js عشان الأخير يستخدم دواله -->
+    <script src="js/settings.js"></script>
     <script src="js/recipes.js"></script>
+    <script src="js/pricing.js"></script>
     <script src="js/recipes-main.js"></script>
 </body>
 </html>

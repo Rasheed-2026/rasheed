@@ -444,6 +444,170 @@ button,
     flex-shrink: 0;
 }
 
+/* === قسم حساب التكلفة داخل بطاقة الوصفة === */
+.recipe-cost {
+    inline-size: 100%;
+    margin-block-start: 0.75rem;
+    padding-block-start: 0.75rem;
+    border-block-start: 1px solid var(--color-border);
+}
+
+.recipe-cost__toggle {
+    inline-size: 100%;
+    min-block-size: 48px;
+    font-weight: 700;
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.recipe-cost__toggle:hover,
+.recipe-cost__toggle:focus {
+    background-color: var(--color-primary);
+    color: #ffffff;
+}
+
+/* لوحة تفاصيل التكلفة */
+.cost-breakdown {
+    margin-block-start: 0.75rem;
+    padding-block: 1rem;
+    padding-inline: 0.9rem;
+    background-color: #fbf8f1;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+}
+
+.cost-inline-message {
+    color: var(--color-muted);
+    font-size: 0.95rem;
+    text-align: center;
+    padding-block: 0.5rem;
+}
+
+.cost-section {
+    margin-block-end: 1rem;
+}
+
+.cost-section:last-child {
+    margin-block-end: 0;
+}
+
+.cost-section__title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-block-end: 0.6rem;
+}
+
+/* صف ضمن اللوحة: اسم على الجهة + قيمة على الأخرى */
+.cost-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding-block: 0.35rem;
+}
+
+.cost-row__label {
+    font-size: 0.95rem;
+    color: var(--color-text);
+    font-weight: 500;
+}
+
+.cost-row__value {
+    font-size: 0.95rem;
+    color: var(--color-text);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.cost-row__details {
+    font-size: 0.85rem;
+    color: var(--color-soft);
+    line-height: 1.7;
+    padding-inline-start: 0.6rem;
+    margin-block-end: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.cost-total {
+    margin-block-start: 0.4rem;
+    padding-block-start: 0.6rem;
+    border-block-start: 1px solid var(--color-border);
+}
+
+.cost-total .cost-row__label,
+.cost-total .cost-row__value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--color-primary);
+}
+
+/* تنبيه أصفر للمكونات المحذوفة */
+.warning-note {
+    background-color: #fff7d6;
+    color: #6b5510;
+    border: 1px solid #f0dc8a;
+    border-radius: var(--radius);
+    padding-block: 0.6rem;
+    padding-inline: 0.8rem;
+    font-size: 0.9rem;
+    margin-block-end: 0.9rem;
+}
+
+/* بطاقات السعر المقترح — الجوال أولاً: مكدّسة */
+.price-suggestions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.price-card {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding-block: 0.8rem;
+    padding-inline: 0.9rem;
+}
+
+.price-card__title {
+    font-weight: 700;
+    color: var(--color-text);
+    margin-block-end: 0.35rem;
+}
+
+.price-card__line {
+    font-size: 0.92rem;
+    color: var(--color-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.price-card--recommended {
+    background-color: #e8f5ee;
+    border-color: #b7dcc4;
+}
+
+.price-card--recommended .price-card__title {
+    color: var(--color-primary);
+    font-size: 1.05rem;
+}
+
+.price-card__hint {
+    margin-block-start: 0.4rem;
+    font-size: 0.82rem;
+    color: var(--color-primary);
+    font-weight: 500;
+}
+
+.educational-footer {
+    margin-block-start: 0.75rem;
+    font-size: 0.85rem;
+    font-style: italic;
+    color: var(--color-soft);
+    line-height: 1.7;
+}
+
 /* === شاشات أكبر === */
 @media (min-width: 768px) {
     body {
@@ -520,5 +684,16 @@ button,
         inline-size: auto;
         flex: 0 0 auto;
         padding-inline: 1.25rem;
+    }
+
+    /* بطاقات الأسعار جنباً إلى جنب على الشاشات الكبيرة */
+    .price-suggestions {
+        flex-direction: row;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+
+    .price-suggestions .price-card {
+        flex: 1 1 0;
     }
 }
