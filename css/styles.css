@@ -126,36 +126,12 @@ h2 {
     border-color: var(--color-primary);
 }
 
-/* شرح صغير تحت كل حقل في صفحة الإعدادات */
+/* شرح صغير تحت حقل أو عنوان فرعي */
 .field-hint {
     margin-block-start: 0.4rem;
     font-size: 0.85rem;
     color: var(--color-soft);
     line-height: 1.5;
-}
-
-/* رسالة حالة تحت نموذج الإعدادات (نجاح / خطأ) */
-.status-message {
-    margin-block-start: 1rem;
-    padding-block: 0.75rem;
-    padding-inline: 1rem;
-    border-radius: var(--radius);
-    font-size: 0.95rem;
-    font-weight: 500;
-    text-align: center;
-    border: 1px solid transparent;
-}
-
-.status-message--success {
-    background-color: #e8f5ee;
-    color: #1e5c3a;
-    border-color: #b7dcc4;
-}
-
-.status-message--error {
-    background-color: #fdecea;
-    color: #8c1c17;
-    border-color: #f2c2bf;
 }
 
 /* === الأزرار === */
@@ -442,6 +418,28 @@ button,
 
 .card-actions .btn {
     flex-shrink: 0;
+}
+
+/* === القسم الفرعي "قيم التسعير" داخل نموذج الوصفة === */
+.pricing-values-subsection {
+    margin-block-start: 1rem;
+    padding-block-start: 1rem;
+    border-block-start: 1px dashed var(--color-border);
+}
+
+.pricing-values-subsection__title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-block-end: 0.4rem;
+}
+
+/* سطر قيم التسعير المعروض في بطاقة الوصفة */
+.item-meta--pricing {
+    margin-block-start: 0.2rem;
+    font-size: 0.82rem;
+    color: var(--color-soft);
+    font-style: italic;
 }
 
 /* === لوحة تفاصيل التكلفة (تُستخدم في صفحة التسعير) === */

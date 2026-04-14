@@ -13,7 +13,6 @@
 // مرجع مختصر لكل الطبقات
 const recipesApi = window.tasceerRecipes;
 const ingredientsApi = window.tasceerIngredients;
-const settingsApi = window.tasceerSettings;
 const pricing = window.tasceerPricing;
 
 // === حالة الصفحة (في الذاكرة فقط — تختفي عند إعادة التحميل) ===
@@ -68,23 +67,28 @@ function baseUnitName(ingredient) {
     return 'جرام';
 }
 
-// جملة شارحة لسطر الطاقة حسب المصدر المختار
-function buildEnergyExplainer(recipe, settings) {
+// جملة شارحة لسطر الطاقة حسب المصدر المختار.
+// نقرأ قيم الكهرباء والغاز من الوصفة نفسها، مع fallback
+// للقيم الافتراضية إذا كانت الوصفة قديمة.
+function buildEnergyExplainer(recipe) {
     const source = recipe.energySource;
     const cook = Number(recipe.cookTimeMinutes) || 0;
     const kw = pricing.ELECTRIC_OVEN_KW;
-    const rateSAR = (Number(settings.electricityRate) / 100).toFixed(2);
+
+    const electricityHalalas = recipe.electricityRate ?? pricing.DEFAULT_ELECTRICITY_RATE;
+    const gasPrice = recipe.gasCylinderPrice ?? pricing.DEFAULT_GAS_CYLINDER_PRICE;
+    const rateSAR = (Number(electricityHalalas) / 100).toFixed(2);
 
     if (source === 'none' || cook === 0) {
         return 'لم يتم اختيار مصدر طاقة لهذه الوصفة (أو وقت الطبخ صفر).';
     }
     if (source === 'electric') {
         return 'الفرن الكهربائي (' + kw + ' كيلوواط) × ' + cook + ' دقيقة × ' +
-            rateSAR + ' ريال لكل كيلوواط ساعة';
+            'تعرفة الكهرباء (' + rateSAR + ' ريال لكل كيلوواط ساعة)';
     }
     if (source === 'gas') {
         return 'الغاز لمدة ' + cook + ' دقيقة، بناءً على سعر أسطوانة ' +
-            pricing.formatSAR(settings.gasCylinderPrice) +
+            pricing.formatSAR(gasPrice) +
             ' تدوم حوالي ' + pricing.GAS_CYLINDER_BURN_HOURS + ' ساعة';
     }
     if (source === 'both') {
@@ -187,7 +191,6 @@ function renderCalculationResult(calculation) {
 
     const breakdown = calculation.breakdown;
     const recipe = calculation.recipe;
-    const settings = calculation.settings;
     const entries = recipe.ingredients || [];
 
     // تكلفة المواد الخام
@@ -219,16 +222,17 @@ function renderCalculationResult(calculation) {
     sectionA.appendChild(buildCostRow('تكلفة الطاقة', pricing.formatSAR(breakdown.energy)));
     const energyDetails = document.createElement('div');
     energyDetails.className = 'cost-row__details';
-    energyDetails.textContent = buildEnergyExplainer(recipe, settings);
+    energyDetails.textContent = buildEnergyExplainer(recipe);
     sectionA.appendChild(energyDetails);
 
-    // قيمة الوقت
+    // قيمة الوقت — نقرأ سعر الساعة من الوصفة (أو الافتراضي)
     sectionA.appendChild(buildCostRow('قيمة وقتك', pricing.formatSAR(breakdown.time)));
     const timeDetails = document.createElement('div');
     timeDetails.className = 'cost-row__details';
     const totalMinutes = Number(recipe.prepTimeMinutes) + Number(recipe.cookTimeMinutes);
+    const hourlyRate = recipe.hourlyRate ?? pricing.DEFAULT_HOURLY_RATE;
     timeDetails.textContent =
-        totalMinutes + ' دقيقة × (' + pricing.formatSAR(settings.hourlyRate) + ' ÷ 60 دقيقة)';
+        totalMinutes + ' دقيقة × (' + pricing.formatSAR(hourlyRate) + ' ÷ 60 دقيقة)';
     sectionA.appendChild(timeDetails);
 
     // صف الإجمالي المميّز
@@ -284,7 +288,7 @@ function renderCalculationResult(calculation) {
     const footer = document.createElement('p');
     footer.className = 'educational-footer';
     footer.textContent =
-        'هذه الأرقام تقديرية. عدّل إعدادات التسعير (قيمة ساعتك، تعرفة الكهرباء، سعر الغاز) لتكون أدق لوضعك.';
+        'هذه الأرقام تقديرية. عدّل قيم التسعير داخل الوصفة نفسها لتكون أدق لوضعك.';
     result.appendChild(footer);
 
     // === Checkbox إضافة للمقارنة + رسالة تأكيد ===
@@ -430,8 +434,9 @@ function performCalculation() {
         return null;
     }
 
-    const settings = settingsApi.getSettings();
-    const breakdown = pricing.calculateTotalCost(recipe, settings);
+    // لا توجد إعدادات عامة — نمرر الوصفة فقط والحسابات
+    // تقرأ قيم التسعير منها مباشرة (مع fallback للافتراضيات)
+    const breakdown = pricing.calculateTotalCost(recipe);
 
     // نفحص المكونات المحذوفة
     const hasDeletedIngredients = entries.some(function (entry) {
@@ -448,7 +453,6 @@ function performCalculation() {
         recipeId: recipe.id,
         recipeName: recipe.name,
         recipe: recipe,
-        settings: settings,
         margin: margin,
         breakdown: breakdown,
         sellingPrice: sellingPrice,

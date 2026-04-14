@@ -45,9 +45,19 @@
         return found || null;
     }
 
-    // تضيف وصفة جديدة. المكونات تبدأ كقائمة فاضية،
-    // وبنضيف طريقة اختيارها في الجلسة القادمة.
-    function addRecipe(name, servings, prepTime, cookTime, energySource) {
+    // تضيف وصفة جديدة.
+    // شكل الوصفة الكامل الآن يحتوي على:
+    //   - name, servings, prepTimeMinutes, cookTimeMinutes, energySource
+    //   - ingredients[]
+    //   - hourlyRate: قيمة ساعة العمل لهذه الوصفة (ريال)
+    //   - electricityRate: تعرفة الكهرباء (هللة لكل كيلوواط ساعة)
+    //   - gasCylinderPrice: سعر أسطوانة الغاز (ريال)
+    // الحقول الثلاثة الأخيرة خاصة بكل وصفة عشان المستخدم
+    // يقدر يضع ظروف مختلفة لكل وصفة (مثلاً شغل ليلي).
+    // الوصفات القديمة قبل هذا التغيير ما عندها هذي الحقول،
+    // وطبقة الحسابات في pricing.js ترجع للقيم الافتراضية
+    // تلقائياً عبر ?? عند الحساب — بدون أي تعديل للبيانات.
+    function addRecipe(name, servings, prepTime, cookTime, energySource, hourlyRate, electricityRate, gasCylinderPrice) {
         const newRecipe = {
             id: crypto.randomUUID(),
             name: name.trim(),
@@ -55,6 +65,9 @@
             prepTimeMinutes: Number(prepTime),
             cookTimeMinutes: Number(cookTime),
             energySource: energySource,
+            hourlyRate: Number(hourlyRate),
+            electricityRate: Number(electricityRate),
+            gasCylinderPrice: Number(gasCylinderPrice),
             ingredients: [],
             createdAt: new Date().toISOString()
         };
@@ -69,7 +82,7 @@
     // تعدّل الحقول الأساسية لوصفة موجودة.
     // مهم: نحافظ على قائمة المكونات كما هي، لأنها
     // ستمتلئ في الجلسة القادمة ولا نبغى نفقدها عند التعديل.
-    function updateRecipe(id, name, servings, prepTime, cookTime, energySource) {
+    function updateRecipe(id, name, servings, prepTime, cookTime, energySource, hourlyRate, electricityRate, gasCylinderPrice) {
         if (!id) {
             throw new Error('رقم الوصفة مطلوب');
         }
@@ -92,6 +105,10 @@
             prepTimeMinutes: Number(prepTime),
             cookTimeMinutes: Number(cookTime),
             energySource: energySource,
+            // قيم التسعير الخاصة بالوصفة
+            hourlyRate: Number(hourlyRate),
+            electricityRate: Number(electricityRate),
+            gasCylinderPrice: Number(gasCylinderPrice),
             // نحافظ على المكونات السابقة بدون أي تغيير
             ingredients: existing.ingredients || [],
             createdAt: existing.createdAt,

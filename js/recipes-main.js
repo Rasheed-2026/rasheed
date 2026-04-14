@@ -105,9 +105,27 @@ function renderRecipes() {
         energy.className = 'item-meta';
         energy.textContent = 'مصدر الطاقة: ' + formatEnergySource(recipe.energySource);
 
+        // سطر قيم التسعير الخاصة بالوصفة.
+        // قرار: للوصفات القديمة (ما عندها الحقول الجديدة)
+        // نعرض القيم الافتراضية بصمت بدون أي علامة.
+        // السبب: هي فعلاً القيم اللي سيستخدمها الحساب، فلا
+        // داعي لإضافة ضوضاء بصرية. عند تعديل الوصفة سترى
+        // القيم نفسها معبّأة في النموذج.
+        const defaults = window.tasceerPricing;
+        const hr = recipe.hourlyRate ?? defaults.DEFAULT_HOURLY_RATE;
+        const er = recipe.electricityRate ?? defaults.DEFAULT_ELECTRICITY_RATE;
+        const gp = recipe.gasCylinderPrice ?? defaults.DEFAULT_GAS_CYLINDER_PRICE;
+        const pricingLine = document.createElement('div');
+        pricingLine.className = 'item-meta item-meta--pricing';
+        pricingLine.textContent =
+            'قيم التسعير: ساعة العمل ' + hr + ' ريال' +
+            ' — الكهرباء ' + er + ' هللة' +
+            ' — الغاز ' + gp + ' ريال';
+
         info.appendChild(name);
         info.appendChild(meta);
         info.appendChild(energy);
+        info.appendChild(pricingLine);
 
         // مجموعة أزرار البطاقة (تعديل + حذف)
         const actions = document.createElement('div');
@@ -282,6 +300,19 @@ function buildIngredientsSection(recipe, allIngredients) {
 
 // === تبديل النموذج بين الإضافة والتعديل ===
 
+// يعبّي حقول التسعير الثلاثة بقيم معينة (دوال مساعدة صغيرة)
+function fillPricingInputs(hourlyRate, electricityRate, gasCylinderPrice) {
+    document.getElementById('recipe-hourly-rate').value = hourlyRate;
+    document.getElementById('recipe-electricity-rate').value = electricityRate;
+    document.getElementById('recipe-gas-price').value = gasCylinderPrice;
+}
+
+// يعبّي الحقول بالقيم الافتراضية (وضع الإضافة أو بعد الإلغاء)
+function fillPricingInputsWithDefaults() {
+    const d = window.tasceerPricing;
+    fillPricingInputs(d.DEFAULT_HOURLY_RATE, d.DEFAULT_ELECTRICITY_RATE, d.DEFAULT_GAS_CYLINDER_PRICE);
+}
+
 // يحوّل النموذج إلى وضع التعديل ويعبّيه بقيم الوصفة
 function enterEditMode(id) {
     const recipe = recipesApi.getRecipeById(id);
@@ -297,6 +328,15 @@ function enterEditMode(id) {
     document.getElementById('recipe-cook-time').value = recipe.cookTimeMinutes;
     document.getElementById('recipe-energy').value = recipe.energySource;
 
+    // قيم التسعير: إذا الوصفة قديمة وما عندها الحقول،
+    // نستخدم القيم الافتراضية المعروضة من pricing.js
+    const d = window.tasceerPricing;
+    fillPricingInputs(
+        recipe.hourlyRate ?? d.DEFAULT_HOURLY_RATE,
+        recipe.electricityRate ?? d.DEFAULT_ELECTRICITY_RATE,
+        recipe.gasCylinderPrice ?? d.DEFAULT_GAS_CYLINDER_PRICE
+    );
+
     document.getElementById('recipe-form-title').textContent = 'تعديل الوصفة';
     document.getElementById('recipe-submit-btn').textContent = 'حفظ التعديلات';
     document.getElementById('recipe-cancel-btn').hidden = false;
@@ -310,6 +350,8 @@ function enterEditMode(id) {
 function exitEditMode() {
     editingRecipeId = null;
     document.getElementById('add-recipe-form').reset();
+    // بعد reset() نرجع القيم الافتراضية للحقول الثلاثة
+    fillPricingInputsWithDefaults();
     document.getElementById('recipe-form-title').textContent = 'إضافة وصفة جديدة';
     document.getElementById('recipe-submit-btn').textContent = 'أضف الوصفة';
     document.getElementById('recipe-cancel-btn').hidden = true;
@@ -318,6 +360,8 @@ function exitEditMode() {
 // === ربط الأحداث بعد ما تجهز الصفحة ===
 document.addEventListener('DOMContentLoaded', function () {
     renderRecipes();
+    // تعبئة أولية للحقول الثلاثة بالقيم الافتراضية
+    fillPricingInputsWithDefaults();
 
     const form = document.getElementById('add-recipe-form');
     const listContainer = document.getElementById('recipes-list');
@@ -333,6 +377,11 @@ document.addEventListener('DOMContentLoaded', function () {
         const prepTime = Number(document.getElementById('recipe-prep-time').value);
         const cookTime = Number(document.getElementById('recipe-cook-time').value);
         const energySource = document.getElementById('recipe-energy').value;
+
+        // قيم التسعير الجديدة — نستخدم parseFloat للسماح بكسور عشرية
+        const hourlyRate = parseFloat(document.getElementById('recipe-hourly-rate').value);
+        const electricityRate = parseFloat(document.getElementById('recipe-electricity-rate').value);
+        const gasCylinderPrice = parseFloat(document.getElementById('recipe-gas-price').value);
 
         // تحقق بسيط من صحة المدخلات
         if (name === '') {
@@ -351,13 +400,28 @@ document.addEventListener('DOMContentLoaded', function () {
             alert('وقت الطبخ لازم يكون صفر أو أكثر.');
             return;
         }
+        if (!(hourlyRate > 0)) {
+            alert('قيمة ساعة العمل لازم تكون رقم أكبر من صفر.');
+            return;
+        }
+        if (!(electricityRate > 0)) {
+            alert('تعرفة الكهرباء لازم تكون رقم أكبر من صفر.');
+            return;
+        }
+        if (!(gasCylinderPrice > 0)) {
+            alert('سعر أسطوانة الغاز لازم يكون رقم أكبر من صفر.');
+            return;
+        }
 
         // نقرر: هل نضيف أو نعدّل بناءً على المتغير editingRecipeId
         if (editingRecipeId === null) {
-            recipesApi.addRecipe(name, servings, prepTime, cookTime, energySource);
+            recipesApi.addRecipe(name, servings, prepTime, cookTime, energySource,
+                hourlyRate, electricityRate, gasCylinderPrice);
             form.reset();
+            fillPricingInputsWithDefaults();
         } else {
-            recipesApi.updateRecipe(editingRecipeId, name, servings, prepTime, cookTime, energySource);
+            recipesApi.updateRecipe(editingRecipeId, name, servings, prepTime, cookTime, energySource,
+                hourlyRate, electricityRate, gasCylinderPrice);
             exitEditMode();
         }
 

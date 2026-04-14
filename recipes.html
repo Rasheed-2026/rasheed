@@ -18,7 +18,6 @@
         <a href="index.html" class="nav-link">المكونات</a>
         <a href="recipes.html" class="nav-link nav-link--active">الوصفات</a>
         <a href="pricing-page.html" class="nav-link">التسعير</a>
-        <a href="settings.html" class="nav-link">الإعدادات</a>
     </nav>
 
     <main class="container">
@@ -90,6 +89,48 @@
                     </select>
                 </div>
 
+                <!-- قسم فرعي: قيم التسعير الخاصة بكل وصفة -->
+                <div class="pricing-values-subsection">
+                    <h3 class="pricing-values-subsection__title">قيم التسعير</h3>
+                    <p class="field-hint">نبدأ بقيم افتراضية معقولة. عدّلها إذا كانت وصفتك تحتاج قيماً مختلفة (مثل شغل ليلي أو ظروف خاصة).</p>
+
+                    <div class="field">
+                        <label for="recipe-hourly-rate">قيمة ساعة العمل (ريال)</label>
+                        <input
+                            type="number"
+                            id="recipe-hourly-rate"
+                            name="recipe-hourly-rate"
+                            min="0"
+                            step="any"
+                            required
+                        >
+                    </div>
+
+                    <div class="field">
+                        <label for="recipe-electricity-rate">تعرفة الكهرباء (هللة/كيلوواط ساعة)</label>
+                        <input
+                            type="number"
+                            id="recipe-electricity-rate"
+                            name="recipe-electricity-rate"
+                            min="0"
+                            step="any"
+                            required
+                        >
+                    </div>
+
+                    <div class="field">
+                        <label for="recipe-gas-price">سعر أسطوانة الغاز (ريال)</label>
+                        <input
+                            type="number"
+                            id="recipe-gas-price"
+                            name="recipe-gas-price"
+                            min="0"
+                            step="any"
+                            required
+                        >
+                    </div>
+                </div>
+
                 <div class="form-actions">
                     <button type="submit" id="recipe-submit-btn" class="btn btn-primary">أضف الوصفة</button>
                     <button type="button" id="recipe-cancel-btn" class="btn btn-secondary" hidden>إلغاء</button>
@@ -106,11 +147,13 @@
         </section>
     </main>
 
-    <!-- صفحة الوصفات صارت للإدارة فقط (اسم، حصص، أوقات، مكونات).
-         الحسابات انتقلت لصفحة "التسعير" ولذلك ما نحمّل pricing.js هنا.
-         الترتيب: ingredients.js ثم recipes.js ثم ملف الواجهة. -->
+    <!-- ingredients.js للقراءة، recipes.js طبقة البيانات،
+         pricing.js نحتاجه هنا فقط للقيم الافتراضية (DEFAULT_*)
+         اللي نستخدمها لتعبئة حقول التسعير الجديدة في النموذج،
+         ثم ملف الواجهة. -->
     <script src="js/ingredients.js"></script>
     <script src="js/recipes.js"></script>
+    <script src="js/pricing.js"></script>
     <script src="js/recipes-main.js"></script>
 </body>
 </html>
