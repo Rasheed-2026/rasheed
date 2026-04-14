@@ -25,6 +25,11 @@ let comparisonList = [];
 // للمقارنة. يصير null قبل أي حساب.
 let lastCalculated = null;
 
+// حالة عرض/إخفاء قسم تفاصيل التكلفة. تبدأ false في كل حساب جديد
+// عشان النتيجة تظهر نظيفة (الأرقام الكبيرة فقط)، والمستخدم يفتح
+// التفاصيل بنفسه إذا حب.
+let breakdownVisible = false;
+
 // === دوال مساعدة للعرض ===
 
 // تنسيق رقم بسيط مثل ما في recipes-main.js
@@ -211,7 +216,61 @@ function renderCalculationResult(calculation) {
 
     result.appendChild(highlight);
 
-    // === القسم أ: تفصيل التكلفة الفعلية ===
+    // === مؤشر نسبة تكلفة المواد الخام ===
+    // يستخدم سعر البيع المحسوب بناءً على الهامش الذي اختاره المستخدم.
+    // يظهر دائماً (لو ما فيه بيانات حقيقية، كائن الفئة يعطينا سلوكاً معقولاً).
+    const foodCostPct = pricing.calculateFoodCostPercentage(
+        calculation.breakdown.materials,
+        calculation.sellingPrice
+    );
+    const foodCategory = pricing.getFoodCostCategory(foodCostPct);
+
+    const indicator = document.createElement('div');
+    indicator.className = 'food-cost-indicator food-cost-indicator--' + foodCategory.level;
+
+    const indLabel = document.createElement('div');
+    indLabel.className = 'food-cost-indicator__title';
+    indLabel.textContent = 'نسبة تكلفة المواد الخام';
+    indicator.appendChild(indLabel);
+
+    const indPct = document.createElement('div');
+    indPct.className = 'food-cost-indicator__percentage';
+    indPct.textContent = foodCostPct.toFixed(1) + '%';
+    indicator.appendChild(indPct);
+
+    const indCatLabel = document.createElement('div');
+    indCatLabel.className = 'food-cost-indicator__label';
+    indCatLabel.textContent = foodCategory.labelAr;
+    indicator.appendChild(indCatLabel);
+
+    const indExplain = document.createElement('div');
+    indExplain.className = 'food-cost-indicator__explanation';
+    indExplain.textContent = foodCategory.explanationAr;
+    indicator.appendChild(indExplain);
+
+    const indFoot = document.createElement('div');
+    indFoot.className = 'food-cost-indicator__footnote';
+    indFoot.textContent = 'هذه النسب مخصصة للأسر المنتجة، وتختلف عن معايير المطاعم التجارية.';
+    indicator.appendChild(indFoot);
+
+    result.appendChild(indicator);
+
+    // === زر إظهار/إخفاء التفاصيل ===
+    // يبدأ مغلقاً في كل حساب جديد. الحالة في breakdownVisible.
+    breakdownVisible = false;
+    const toggleBtn = document.createElement('button');
+    toggleBtn.type = 'button';
+    toggleBtn.id = 'toggle-breakdown-btn';
+    toggleBtn.className = 'btn btn-secondary toggle-details-btn';
+    toggleBtn.textContent = 'عرض التفاصيل ▾';
+    result.appendChild(toggleBtn);
+
+    // حاوية التفاصيل القابلة للطي — تبدأ مخفية
+    const breakdownContainer = document.createElement('div');
+    breakdownContainer.id = 'breakdown-container';
+    breakdownContainer.hidden = true;
+
+    // === القسم أ: تفصيل التكلفة الفعلية (داخل الحاوية القابلة للطي) ===
     const sectionA = document.createElement('div');
     sectionA.className = 'cost-section';
 
@@ -310,7 +369,8 @@ function renderCalculationResult(calculation) {
     totalRow.appendChild(totalValue);
     sectionA.appendChild(totalRow);
 
-    result.appendChild(sectionA);
+    breakdownContainer.appendChild(sectionA);
+    result.appendChild(breakdownContainer);
 
     // === القسم ب: بطاقة السعر المقترح (واحدة فقط) ===
     const sectionB = document.createElement('div');
@@ -564,8 +624,26 @@ document.addEventListener('DOMContentLoaded', function () {
         renderCalculationResult(calc);
     });
 
-    // === أحداث منطقة النتيجة (delegated) — checkbox الإضافة للمقارنة ===
+    // === أحداث منطقة النتيجة (delegated) ===
     const resultSection = document.getElementById('calculation-result');
+
+    // زر إظهار/إخفاء التفاصيل — نتعامل معه بـ delegation
+    // لأنه يُعاد بناؤه في كل حساب جديد.
+    resultSection.addEventListener('click', function (event) {
+        const target = event.target;
+        if (target && target.id === 'toggle-breakdown-btn') {
+            const container = document.getElementById('breakdown-container');
+            if (!container) {
+                return;
+            }
+            breakdownVisible = !breakdownVisible;
+            container.hidden = !breakdownVisible;
+            target.textContent = breakdownVisible
+                ? 'إخفاء التفاصيل ▴'
+                : 'عرض التفاصيل ▾';
+        }
+    });
+
     resultSection.addEventListener('change', function (event) {
         const target = event.target;
         if (target.id !== 'add-to-comparison') {

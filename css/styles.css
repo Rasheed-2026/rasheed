@@ -591,6 +591,98 @@ button,
     gap: 0.2rem;
 }
 
+/* === مؤشر نسبة تكلفة المواد الخام === */
+.food-cost-indicator {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-inline-start: 5px solid var(--color-border);
+    border-radius: var(--radius);
+    padding-block: 0.9rem;
+    padding-inline: 1rem;
+    margin-block-end: 1rem;
+}
+
+.food-cost-indicator__title {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--color-muted);
+    margin-block-end: 0.3rem;
+}
+
+.food-cost-indicator__percentage {
+    font-size: 1.8em;
+    font-weight: 700;
+    color: var(--color-text);
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+}
+
+.food-cost-indicator__label {
+    margin-block-start: 0.2rem;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.food-cost-indicator__explanation {
+    margin-block-start: 0.5rem;
+    font-size: 0.88rem;
+    color: var(--color-muted);
+    line-height: 1.6;
+}
+
+.food-cost-indicator__footnote {
+    margin-block-start: 0.6rem;
+    font-size: 0.78rem;
+    font-style: italic;
+    color: var(--color-soft);
+    line-height: 1.5;
+}
+
+/* تلوين الأكسنت + خلفية خفيفة حسب الفئة */
+.food-cost-indicator--low {
+    border-inline-start-color: #2c6fb0;
+    background-color: #eef4fb;
+}
+.food-cost-indicator--low .food-cost-indicator__label {
+    color: #1f4f80;
+}
+
+.food-cost-indicator--excellent {
+    border-inline-start-color: #2f8f5a;
+    background-color: #effaf2;
+}
+.food-cost-indicator--excellent .food-cost-indicator__label {
+    color: #1e5c3a;
+}
+
+.food-cost-indicator--acceptable {
+    border-inline-start-color: #c9961a;
+    background-color: #fff8e6;
+}
+.food-cost-indicator--acceptable .food-cost-indicator__label {
+    color: #6b5510;
+}
+
+.food-cost-indicator--high {
+    border-inline-start-color: #b3261e;
+    background-color: #fdecea;
+}
+.food-cost-indicator--high .food-cost-indicator__label {
+    color: #8c1c17;
+}
+
+/* زر إظهار/إخفاء تفاصيل التكلفة — متوسط ومركّز */
+.toggle-details-btn {
+    display: block;
+    margin-inline: auto;
+    margin-block: 1rem;
+    min-block-size: 44px;
+    padding-block: 10px;
+    padding-inline: 1.5rem;
+    font-weight: 500;
+}
+
 /* عنوان فرعي صغير قبل قائمة التكاليف الإضافية في تفصيل الحساب */
 .cost-extras-subtitle {
     margin-block-start: 0.6rem;

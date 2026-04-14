@@ -202,6 +202,68 @@
         };
     }
 
+    // === نسبة تكلفة المواد الخام إلى سعر البيع ===
+    // ترجع نسبة مئوية (مدوّرة لمنزلة عشرية واحدة) تخبرك كم
+    // تستهلك المواد من سعر البيع. مثال: مواد 30 ريال وسعر 100
+    // → 30.0%. لو السعر صفر أو غير صحيح، نرجع 0 لتجنب القسمة
+    // على صفر.
+    function calculateFoodCostPercentage(materialsCost, sellingPrice) {
+        const m = Number(materialsCost) || 0;
+        const s = Number(sellingPrice) || 0;
+        if (s <= 0 || m <= 0) {
+            return 0;
+        }
+        const pct = (m / s) * 100;
+        return Math.round(pct * 10) / 10;
+    }
+
+    // === تصنيف نسبة تكلفة المواد ===
+    // ملاحظة مهمة: هذه النسب مُعايَرة للأسر المنتجة في السعودية،
+    // وليست لمعايير المطاعم التجارية. السبب: المطاعم تدفع إيجارات
+    // ورواتب وتراخيص ومصاريف ثابتة (~30% إضافية)، لذلك نسبة المواد
+    // الصحية عندها 25-35%. الأسر المنتجة في البيت ما عندها هذي
+    // المصاريف، فالنسبة الصحية لديها أعلى طبيعياً.
+    //
+    // الفئات (للأسر المنتجة):
+    //   < 30%       → منخفضة (أزرق): ربما السعر مرتفع زيادة
+    //   30% - 55%   → ممتازة (أخضر): التوازن المثالي
+    //   55% - 65%   → مقبولة (أصفر): فيه مجال للتحسين
+    //   >= 65%      → عالية (أحمر): راجع المواد أو ارفع السعر
+    function getFoodCostCategory(percentage) {
+        const p = Number(percentage) || 0;
+
+        if (p < 30) {
+            return {
+                level: 'low',
+                labelAr: 'منخفضة',
+                color: 'blue',
+                explanationAr: 'تكلفة المواد منخفضة جداً مقارنة بسعرك. هذا قد يعني إنك تبيع بسعر أعلى من اللازم، أو إن موادك رخيصة جداً. راجع أسعار المنافسين وجودة مكوناتك.'
+            };
+        }
+        if (p < 55) {
+            return {
+                level: 'excellent',
+                labelAr: 'ممتازة',
+                color: 'green',
+                explanationAr: 'نسبة صحية وممتازة للأسر المنتجة. أنت تحقق توازن جيد بين جودة المواد والربح.'
+            };
+        }
+        if (p < 65) {
+            return {
+                level: 'acceptable',
+                labelAr: 'مقبولة',
+                color: 'yellow',
+                explanationAr: 'النسبة مقبولة لكن فكر بتحسينها. جرب ترفع السعر قليلاً أو تشتري المواد بكميات أكبر للحصول على خصومات.'
+            };
+        }
+        return {
+            level: 'high',
+            labelAr: 'عالية',
+            color: 'red',
+            explanationAr: 'تكلفة المواد عالية جداً. راجع المكونات (هل فيه بدائل أرخص بنفس الجودة؟)، أو ارفع سعر البيع، أو فكر في تقليل الكميات المستخدمة.'
+        };
+    }
+
     // نعرض كل الدوال + الثوابت على كائن عام في window.
     // القيم الافتراضية معروضة كمان عشان طبقة الواجهة
     // تقدر تستخدمها لتعبئة النموذج في وضع الإضافة.
@@ -216,6 +278,8 @@
         calculateTimeCost: calculateTimeCost,
         calculateExtraCosts: calculateExtraCosts,
         calculateTotalCost: calculateTotalCost,
+        calculateFoodCostPercentage: calculateFoodCostPercentage,
+        getFoodCostCategory: getFoodCostCategory,
         calculateSellingPrices: calculateSellingPrices,
         formatSAR: formatSAR
     };
