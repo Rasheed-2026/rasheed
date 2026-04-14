@@ -89,6 +89,50 @@
                     </select>
                 </div>
 
+                <!-- قسم فرعي: تكاليف إضافية اختيارية لكل وصفة -->
+                <div class="extra-costs-subsection">
+                    <h3 class="pricing-values-subsection__title">تكاليف إضافية</h3>
+                    <p class="field-hint">أضف التكاليف الإضافية لكل وصفة (التغليف، التوصيل، أي مصاريف أخرى).</p>
+
+                    <div class="extra-costs-row">
+                        <div class="field">
+                            <label for="recipe-packaging-cost">تغليف (ريال)</label>
+                            <input
+                                type="number"
+                                id="recipe-packaging-cost"
+                                name="recipe-packaging-cost"
+                                min="0"
+                                step="any"
+                                required
+                            >
+                        </div>
+
+                        <div class="field">
+                            <label for="recipe-delivery-cost">توصيل (ريال)</label>
+                            <input
+                                type="number"
+                                id="recipe-delivery-cost"
+                                name="recipe-delivery-cost"
+                                min="0"
+                                step="any"
+                                required
+                            >
+                        </div>
+
+                        <div class="field">
+                            <label for="recipe-other-cost">تكاليف أخرى (ريال)</label>
+                            <input
+                                type="number"
+                                id="recipe-other-cost"
+                                name="recipe-other-cost"
+                                min="0"
+                                step="any"
+                                required
+                            >
+                        </div>
+                    </div>
+                </div>
+
                 <!-- قسم فرعي: قيم التسعير الخاصة بكل وصفة -->
                 <div class="pricing-values-subsection">
                     <h3 class="pricing-values-subsection__title">قيم التسعير</h3>

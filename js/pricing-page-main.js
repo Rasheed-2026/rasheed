@@ -180,6 +180,37 @@ function renderCalculationResult(calculation) {
         result.appendChild(warn);
     }
 
+    // === صندوق "ستكسب من كل حصة" — التشجيع العاطفي في أعلى النتيجة ===
+    // الربح الإجمالي = السعر - التكلفة، والربح للحصة = الربح ÷ عدد الحصص.
+    // نتعامل بدفاعية لو servings = 0 بعرض شرطة بدل رقم.
+    const totalCost = calculation.breakdown.total;
+    const sellingPrice = calculation.sellingPrice;
+    const totalProfit = Math.round((sellingPrice - totalCost) * 100) / 100;
+    const servings = Number(calculation.recipe.servings) || 0;
+    const profitPerServing = servings > 0
+        ? Math.round((totalProfit / servings) * 100) / 100
+        : null;
+
+    const highlight = document.createElement('div');
+    highlight.className = 'profit-highlight';
+
+    const hLabel = document.createElement('div');
+    hLabel.className = 'profit-highlight__label';
+    hLabel.textContent = 'ستكسب من كل حصة';
+    highlight.appendChild(hLabel);
+
+    const hAmount = document.createElement('div');
+    hAmount.className = 'profit-highlight__amount';
+    hAmount.textContent = profitPerServing === null ? '—' : pricing.formatSAR(profitPerServing);
+    highlight.appendChild(hAmount);
+
+    const hTotal = document.createElement('div');
+    hTotal.className = 'profit-highlight__total';
+    hTotal.textContent = 'ربح إجمالي للوصفة كاملة: ' + pricing.formatSAR(totalProfit);
+    highlight.appendChild(hTotal);
+
+    result.appendChild(highlight);
+
     // === القسم أ: تفصيل التكلفة الفعلية ===
     const sectionA = document.createElement('div');
     sectionA.className = 'cost-section';
@@ -234,6 +265,37 @@ function renderCalculationResult(calculation) {
     timeDetails.textContent =
         totalMinutes + ' دقيقة × (' + pricing.formatSAR(hourlyRate) + ' ÷ 60 دقيقة)';
     sectionA.appendChild(timeDetails);
+
+    // === التكاليف الإضافية (تظهر فقط لو فيه قيمة > 0) ===
+    const extras = breakdown.extras;
+    if (extras && extras.total > 0) {
+        const extrasTitle = document.createElement('div');
+        extrasTitle.className = 'cost-extras-subtitle';
+        extrasTitle.textContent = 'تكاليف إضافية';
+        sectionA.appendChild(extrasTitle);
+
+        const extrasDetails = document.createElement('div');
+        extrasDetails.className = 'cost-row__details';
+        if (extras.packaging > 0) {
+            const l = document.createElement('div');
+            l.textContent = '• تغليف: ' + pricing.formatSAR(extras.packaging);
+            extrasDetails.appendChild(l);
+        }
+        if (extras.delivery > 0) {
+            const l = document.createElement('div');
+            l.textContent = '• توصيل: ' + pricing.formatSAR(extras.delivery);
+            extrasDetails.appendChild(l);
+        }
+        if (extras.other > 0) {
+            const l = document.createElement('div');
+            l.textContent = '• أخرى: ' + pricing.formatSAR(extras.other);
+            extrasDetails.appendChild(l);
+        }
+        sectionA.appendChild(extrasDetails);
+
+        // سطر إجمالي التكاليف الإضافية بنفس نمط الصفوف الرئيسية
+        sectionA.appendChild(buildCostRow('إجمالي التكاليف الإضافية', pricing.formatSAR(extras.total)));
+    }
 
     // صف الإجمالي المميّز
     const totalRow = document.createElement('div');

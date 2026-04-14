@@ -428,6 +428,44 @@ button,
     flex-shrink: 0;
 }
 
+/* === القسم الفرعي "تكاليف إضافية" داخل نموذج الوصفة === */
+.extra-costs-subsection {
+    margin-block-start: 1rem;
+    padding-block-start: 1rem;
+    border-block-start: 1px dashed var(--color-border);
+}
+
+/* صف حقول التكاليف الإضافية — نفس سلوك .pricing-fields-row */
+.extra-costs-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-block-start: 0.5rem;
+}
+
+.extra-costs-row .field {
+    margin-block-end: 0;
+}
+
+@media (min-width: 600px) {
+    .extra-costs-row {
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .extra-costs-row .field {
+        flex: 1 1 0;
+        min-inline-size: 0;
+    }
+
+    .extra-costs-row .field label {
+        display: flex;
+        align-items: flex-end;
+        min-block-size: 2.8em;
+    }
+}
+
 /* === القسم الفرعي "قيم التسعير" داخل نموذج الوصفة === */
 .pricing-values-subsection {
     margin-block-start: 1rem;
@@ -551,6 +589,55 @@ button,
     display: flex;
     flex-direction: column;
     gap: 0.2rem;
+}
+
+/* عنوان فرعي صغير قبل قائمة التكاليف الإضافية في تفصيل الحساب */
+.cost-extras-subtitle {
+    margin-block-start: 0.6rem;
+    margin-block-end: 0.2rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+/* صندوق "ستكسب من كل حصة" — يظهر في أعلى نتيجة الحساب */
+.profit-highlight {
+    background-color: #e8f5ee;
+    border: 1px solid #b7dcc4;
+    border-radius: var(--radius);
+    padding-block: 1.25rem;
+    padding-inline: 1rem;
+    margin-block-end: 1rem;
+    text-align: center;
+}
+
+.profit-highlight__label {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #1e5c3a;
+    margin-block-end: 0.4rem;
+}
+
+.profit-highlight__amount {
+    font-size: 2em;
+    font-weight: 700;
+    color: var(--color-primary);
+    line-height: 1.2;
+    word-break: break-word;
+    font-variant-numeric: tabular-nums;
+}
+
+.profit-highlight__total {
+    margin-block-start: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--color-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+@media (min-width: 600px) {
+    .profit-highlight__amount {
+        font-size: 2.5em;
+    }
 }
 
 .cost-total {

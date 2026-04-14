@@ -147,18 +147,38 @@
         return round2(cost);
     }
 
+    // === التكاليف الإضافية ===
+    // ترجع كائن يحتوي على تكلفة التغليف والتوصيل والتكاليف الأخرى
+    // مع مجموعها. الحقول الثلاثة اختيارية على الوصفة، فإذا كانت
+    // غير موجودة (وصفات قديمة) نعتبرها صفر عبر ?? 0.
+    function calculateExtraCosts(recipe) {
+        const packaging = round2(Number(recipe.packagingCost ?? 0) || 0);
+        const delivery = round2(Number(recipe.deliveryCost ?? 0) || 0);
+        const other = round2(Number(recipe.otherCost ?? 0) || 0);
+        const total = round2(packaging + delivery + other);
+        return {
+            packaging: packaging,
+            delivery: delivery,
+            other: other,
+            total: total
+        };
+    }
+
     // === إجمالي التكلفة الفعلية ===
-    // يستخدم قيم الوصفة مباشرة بدون الحاجة لمصدر خارجي للإعدادات.
+    // يستخدم قيم الوصفة مباشرة. الإجمالي الآن يشمل التكاليف الإضافية.
+    // المعادلة: الإجمالي = المواد + الطاقة + الوقت + التكاليف الإضافية
     function calculateTotalCost(recipe) {
         const materials = calculateMaterialsCost(recipe);
         const energy = calculateEnergyCost(recipe);
         const time = calculateTimeCost(recipe);
-        const total = round2(materials + energy + time);
+        const extras = calculateExtraCosts(recipe);
+        const total = round2(materials + energy + time + extras.total);
 
         return {
             materials: materials,
             energy: energy,
             time: time,
+            extras: extras,
             total: total
         };
     }
@@ -194,6 +214,7 @@
         calculateMaterialsCost: calculateMaterialsCost,
         calculateEnergyCost: calculateEnergyCost,
         calculateTimeCost: calculateTimeCost,
+        calculateExtraCosts: calculateExtraCosts,
         calculateTotalCost: calculateTotalCost,
         calculateSellingPrices: calculateSellingPrices,
         formatSAR: formatSAR

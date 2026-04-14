@@ -132,6 +132,15 @@ function renderRecipes() {
         info.appendChild(energy);
         info.appendChild(pricingLine);
 
+        // سطر التكاليف الإضافية — يظهر فقط إذا كانت قيمة واحدة على الأقل > 0
+        const extrasText = formatExtraCostsLine(recipe);
+        if (extrasText !== null) {
+            const extrasLine = document.createElement('div');
+            extrasLine.className = 'item-meta item-meta--pricing';
+            extrasLine.textContent = extrasText;
+            info.appendChild(extrasLine);
+        }
+
         // مجموعة أزرار البطاقة (تعديل + حذف)
         const actions = document.createElement('div');
         actions.className = 'card-actions';
@@ -328,6 +337,41 @@ function fillPricingInputsWithDefaults() {
     fillPricingInputs(d.DEFAULT_HOURLY_RATE, d.DEFAULT_ELECTRICITY_RATE, d.DEFAULT_GAS_CYLINDER_PRICE);
 }
 
+// يعبّي حقول التكاليف الإضافية الثلاثة بقيم معينة
+function fillExtraCostInputs(packaging, delivery, other) {
+    document.getElementById('recipe-packaging-cost').value = packaging;
+    document.getElementById('recipe-delivery-cost').value = delivery;
+    document.getElementById('recipe-other-cost').value = other;
+}
+
+// التكاليف الإضافية تبدأ بصفر افتراضياً
+function fillExtraCostInputsWithDefaults() {
+    fillExtraCostInputs(0, 0, 0);
+}
+
+// تكوّن سطر التكاليف الإضافية لعرضه في بطاقة الوصفة.
+// نتجاهل الحقول التي قيمتها صفر. لو الكل صفر نرجع null
+// عشان طبقة العرض ما تضيف السطر أصلاً.
+function formatExtraCostsLine(recipe) {
+    const pkg = Number(recipe.packagingCost ?? 0);
+    const del = Number(recipe.deliveryCost ?? 0);
+    const oth = Number(recipe.otherCost ?? 0);
+    const parts = [];
+    if (pkg > 0) {
+        parts.push('تغليف ' + pkg + ' ريال');
+    }
+    if (del > 0) {
+        parts.push('توصيل ' + del + ' ريال');
+    }
+    if (oth > 0) {
+        parts.push('أخرى ' + oth + ' ريال');
+    }
+    if (parts.length === 0) {
+        return null;
+    }
+    return 'تكاليف إضافية: ' + parts.join(' — ');
+}
+
 // يحوّل النموذج إلى وضع التعديل ويعبّيه بقيم الوصفة
 function enterEditMode(id) {
     const recipe = recipesApi.getRecipeById(id);
@@ -352,6 +396,13 @@ function enterEditMode(id) {
         recipe.gasCylinderPrice ?? d.DEFAULT_GAS_CYLINDER_PRICE
     );
 
+    // التكاليف الإضافية: للوصفات القديمة نعرض 0
+    fillExtraCostInputs(
+        recipe.packagingCost ?? 0,
+        recipe.deliveryCost ?? 0,
+        recipe.otherCost ?? 0
+    );
+
     document.getElementById('recipe-form-title').textContent = 'تعديل الوصفة';
     document.getElementById('recipe-submit-btn').textContent = 'حفظ التعديلات';
     document.getElementById('recipe-cancel-btn').hidden = false;
@@ -367,6 +418,7 @@ function exitEditMode() {
     document.getElementById('add-recipe-form').reset();
     // بعد reset() نرجع القيم الافتراضية للحقول الثلاثة
     fillPricingInputsWithDefaults();
+    fillExtraCostInputsWithDefaults();
     document.getElementById('recipe-form-title').textContent = 'إضافة وصفة جديدة';
     document.getElementById('recipe-submit-btn').textContent = 'أضف الوصفة';
     document.getElementById('recipe-cancel-btn').hidden = true;
@@ -377,6 +429,7 @@ document.addEventListener('DOMContentLoaded', function () {
     renderRecipes();
     // تعبئة أولية للحقول الثلاثة بالقيم الافتراضية
     fillPricingInputsWithDefaults();
+    fillExtraCostInputsWithDefaults();
 
     const form = document.getElementById('add-recipe-form');
     const listContainer = document.getElementById('recipes-list');
@@ -397,6 +450,11 @@ document.addEventListener('DOMContentLoaded', function () {
         const hourlyRate = parseFloat(document.getElementById('recipe-hourly-rate').value);
         const electricityRate = parseFloat(document.getElementById('recipe-electricity-rate').value);
         const gasCylinderPrice = parseFloat(document.getElementById('recipe-gas-price').value);
+
+        // التكاليف الإضافية: الصفر مسموح
+        const packagingCost = parseFloat(document.getElementById('recipe-packaging-cost').value);
+        const deliveryCost = parseFloat(document.getElementById('recipe-delivery-cost').value);
+        const otherCost = parseFloat(document.getElementById('recipe-other-cost').value);
 
         // تحقق بسيط من صحة المدخلات
         if (name === '') {
@@ -427,16 +485,31 @@ document.addEventListener('DOMContentLoaded', function () {
             alert('سعر أسطوانة الغاز لازم يكون رقم أكبر من صفر.');
             return;
         }
+        if (!(packagingCost >= 0)) {
+            alert('تكلفة التغليف لازم تكون رقم صفر أو أكثر.');
+            return;
+        }
+        if (!(deliveryCost >= 0)) {
+            alert('تكلفة التوصيل لازم تكون رقم صفر أو أكثر.');
+            return;
+        }
+        if (!(otherCost >= 0)) {
+            alert('التكاليف الأخرى لازم تكون رقم صفر أو أكثر.');
+            return;
+        }
 
         // نقرر: هل نضيف أو نعدّل بناءً على المتغير editingRecipeId
         if (editingRecipeId === null) {
             recipesApi.addRecipe(name, servings, prepTime, cookTime, energySource,
-                hourlyRate, electricityRate, gasCylinderPrice);
+                hourlyRate, electricityRate, gasCylinderPrice,
+                packagingCost, deliveryCost, otherCost);
             form.reset();
             fillPricingInputsWithDefaults();
+            fillExtraCostInputsWithDefaults();
         } else {
             recipesApi.updateRecipe(editingRecipeId, name, servings, prepTime, cookTime, energySource,
-                hourlyRate, electricityRate, gasCylinderPrice);
+                hourlyRate, electricityRate, gasCylinderPrice,
+                packagingCost, deliveryCost, otherCost);
             exitEditMode();
         }
 

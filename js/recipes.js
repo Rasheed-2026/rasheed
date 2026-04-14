@@ -52,12 +52,27 @@
     //   - hourlyRate: قيمة ساعة العمل لهذه الوصفة (ريال)
     //   - electricityRate: تعرفة الكهرباء (هللة لكل كيلوواط ساعة)
     //   - gasCylinderPrice: سعر أسطوانة الغاز (ريال)
-    // الحقول الثلاثة الأخيرة خاصة بكل وصفة عشان المستخدم
-    // يقدر يضع ظروف مختلفة لكل وصفة (مثلاً شغل ليلي).
-    // الوصفات القديمة قبل هذا التغيير ما عندها هذي الحقول،
-    // وطبقة الحسابات في pricing.js ترجع للقيم الافتراضية
-    // تلقائياً عبر ?? عند الحساب — بدون أي تعديل للبيانات.
-    function addRecipe(name, servings, prepTime, cookTime, energySource, hourlyRate, electricityRate, gasCylinderPrice) {
+    //   - packagingCost: تكلفة التغليف للوصفة كاملة (ريال) — اختياري
+    //   - deliveryCost: تكلفة التوصيل للوصفة كاملة (ريال) — اختياري
+    //   - otherCost: أي تكاليف إضافية أخرى (ريال) — اختياري
+    // الحقول الإضافية كلها اختيارية. الوصفات القديمة قبل
+    // إضافتها لا تحتوي عليها، وطبقة الحسابات في pricing.js
+    // ترجع تلقائياً إلى 0 عبر ?? — بدون أي migration.
+    function addRecipe(name, servings, prepTime, cookTime, energySource, hourlyRate, electricityRate, gasCylinderPrice, packagingCost, deliveryCost, otherCost) {
+        // تحقق من أن التكاليف الإضافية أرقام غير سالبة (الصفر مسموح)
+        const pkg = Number(packagingCost);
+        const del = Number(deliveryCost);
+        const oth = Number(otherCost);
+        if (!(pkg >= 0)) {
+            throw new Error('تكلفة التغليف لازم تكون رقم صفر أو أكثر.');
+        }
+        if (!(del >= 0)) {
+            throw new Error('تكلفة التوصيل لازم تكون رقم صفر أو أكثر.');
+        }
+        if (!(oth >= 0)) {
+            throw new Error('التكاليف الأخرى لازم تكون رقم صفر أو أكثر.');
+        }
+
         const newRecipe = {
             id: crypto.randomUUID(),
             name: name.trim(),
@@ -68,6 +83,9 @@
             hourlyRate: Number(hourlyRate),
             electricityRate: Number(electricityRate),
             gasCylinderPrice: Number(gasCylinderPrice),
+            packagingCost: pkg,
+            deliveryCost: del,
+            otherCost: oth,
             ingredients: [],
             createdAt: new Date().toISOString()
         };
@@ -82,9 +100,23 @@
     // تعدّل الحقول الأساسية لوصفة موجودة.
     // مهم: نحافظ على قائمة المكونات كما هي، لأنها
     // ستمتلئ في الجلسة القادمة ولا نبغى نفقدها عند التعديل.
-    function updateRecipe(id, name, servings, prepTime, cookTime, energySource, hourlyRate, electricityRate, gasCylinderPrice) {
+    function updateRecipe(id, name, servings, prepTime, cookTime, energySource, hourlyRate, electricityRate, gasCylinderPrice, packagingCost, deliveryCost, otherCost) {
         if (!id) {
             throw new Error('رقم الوصفة مطلوب');
+        }
+
+        // تحقق من أن التكاليف الإضافية أرقام غير سالبة
+        const pkg = Number(packagingCost);
+        const del = Number(deliveryCost);
+        const oth = Number(otherCost);
+        if (!(pkg >= 0)) {
+            throw new Error('تكلفة التغليف لازم تكون رقم صفر أو أكثر.');
+        }
+        if (!(del >= 0)) {
+            throw new Error('تكلفة التوصيل لازم تكون رقم صفر أو أكثر.');
+        }
+        if (!(oth >= 0)) {
+            throw new Error('التكاليف الأخرى لازم تكون رقم صفر أو أكثر.');
         }
 
         const recipes = getAllRecipes();
@@ -109,6 +141,10 @@
             hourlyRate: Number(hourlyRate),
             electricityRate: Number(electricityRate),
             gasCylinderPrice: Number(gasCylinderPrice),
+            // التكاليف الإضافية
+            packagingCost: pkg,
+            deliveryCost: del,
+            otherCost: oth,
             // نحافظ على المكونات السابقة بدون أي تغيير
             ingredients: existing.ingredients || [],
             createdAt: existing.createdAt,
