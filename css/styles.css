@@ -1270,9 +1270,8 @@ button,
 }
 
 .app-header__title {
-    max-inline-size: 600px;
-    margin-inline: auto;
     margin-block: 0;
+    padding-inline-start: 0.5rem;
     font-size: 1.35rem;
     font-weight: 700;
     color: var(--color-primary);
