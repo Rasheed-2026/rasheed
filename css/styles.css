@@ -1279,34 +1279,45 @@ button,
     font-weight: 700;
     color: var(--color-primary);
     line-height: 1.3;
+    flex: 1 1 0;
+    text-align: start;
+    min-inline-size: 0;
 }
 
-/* شريط التنقل داخل الترويسة — بدون خلفية مستقلة */
+/* .nav لا يظهر كصندوق: أطفاله يصيرون مباشرة أبناء .app-header
+   عشان نحصل على توزيع ثلاثي: الاسم / الروابط الرئيسية / رابط المساعدة */
 .app-header .nav {
-    background-color: transparent;
-    border-block-end: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 0.5rem 1rem;
-    flex: 1;
+    display: contents;
 }
 
-/* مجموعة الروابط الرئيسية (على inline-start بعد الاسم) */
+/* مجموعة الروابط الرئيسية في الوسط */
 .nav__main-links {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 0.25rem;
+    flex: 0 1 auto;
     flex-wrap: wrap;
 }
 
-/* رابط المساعدة منفصل على inline-end */
+/* رابط المساعدة على الطرف الآخر (inline-end) */
 .nav__help-link {
     display: flex;
     align-items: center;
+    justify-content: flex-end;
+    flex: 1 1 0;
+    min-inline-size: 0;
+}
+
+/* على الشاشات الضيقة: كل مجموعة تأخذ سطرها الخاص وتتوسط */
+@media (max-width: 700px) {
+    .app-header__title,
+    .nav__main-links,
+    .nav__help-link {
+        flex: 1 1 100%;
+        justify-content: center;
+        text-align: center;
+    }
 }
 
 /* === سهم الانتقال للصفحة التالية === */
