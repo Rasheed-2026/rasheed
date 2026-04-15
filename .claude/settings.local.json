@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git:*)",
+      "Bash(node -c js/recipes.js)",
+      "Bash(node -c js/recipes-main.js)",
+      "Bash(node -c js/settings.js)",
+      "Bash(node -c js/settings-main.js)",
+      "Bash(awk '/REMOVED_COST_BLOCK_START/{skip=1} !skip{print} /REMOVED_COST_BLOCK_END/{skip=0}' js/recipes-main.js)",
+      "Bash(mv js/recipes-main.js.tmp js/recipes-main.js)",
+      "Bash(node -c js/pricing-page-main.js)",
+      "Bash(node -c js/pricing.js)",
+      "Bash(rm settings.html js/settings-main.js js/settings.js)",
+      "Bash(ls *.html)",
+      "Bash(node -c js/shopping-lists.js)",
+      "Bash(node -c js/shopping-aggregator.js)",
+      "Bash(node -c js/shopping-main.js)"
+    ]
+  }
+}
