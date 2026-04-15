@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>كيف تستخدم؟ — حاسبة التسعير للأسر المنتجة</title>
+    <title>كيف تستخدم؟ — رشيد</title>
 
     <!-- خط عربي من Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,7 +15,7 @@
 <body>
     <!-- ترويسة التطبيق: الاسم + شريط التنقل في صف واحد -->
     <header class="app-header">
-        <h1 class="app-header__title">حاسبة التسعير للأسر المنتجة</h1>
+        <h1 class="app-header__title">رشيد</h1>
         <nav class="nav" aria-label="القائمة الرئيسية">
             <div class="nav__main-links">
                 <a href="index.html" class="nav-link">المكونات</a>
@@ -25,6 +25,7 @@
             </div>
             <div class="nav__help-link">
                 <a href="help.html" class="nav-link nav-link--active">كيف تستخدم؟</a>
+                <button id="logout-btn" class="btn btn--logout">تسجيل الخروج</button>
             </div>
         </nav>
     </header>
@@ -202,5 +203,10 @@
             </div>
         </details>
     </main>
+
+    <!-- Supabase أولاً: المكتبة، ثم تهيئة العميل، ثم حارس الصفحة -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/auth-guard.js"></script>
 </body>
 </html>
