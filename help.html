@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>كيف تستخدم؟ — حاسبة التسعير للأسر المنتجة</title>
+
+    <!-- خط عربي من Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- ترويسة التطبيق: الاسم + شريط التنقل في صف واحد -->
+    <header class="app-header">
+        <h1 class="app-header__title">حاسبة التسعير للأسر المنتجة</h1>
+        <nav class="nav" aria-label="القائمة الرئيسية">
+            <div class="nav__main-links">
+                <a href="index.html" class="nav-link">المكونات</a>
+                <a href="recipes.html" class="nav-link">الوصفات</a>
+                <a href="pricing-page.html" class="nav-link">التسعير</a>
+                <a href="shopping.html" class="nav-link">قائمة التسوق</a>
+            </div>
+            <div class="nav__help-link">
+                <a href="help.html" class="nav-link nav-link--active">كيف تستخدم؟</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container">
+        <h1>كيف تستخدم البرنامج؟</h1>
+        <p class="intro">دليل بسيط يشرح لك كل خطوة في البرنامج. اضغط على أي قسم لقراءة التفاصيل.</p>
+
+        <!-- القسم ١: المكونات -->
+        <details class="help-section">
+            <summary class="help-section__title">
+                <span class="help-section__icon" aria-hidden="true">🧂</span>
+                <span>المكونات</span>
+            </summary>
+            <div class="help-section__content">
+                <h3>ما هي صفحة المكونات؟</h3>
+                <p>هنا تضيف كل المواد الخام اللي تستخدمها في منتجاتك. مثل: طحين، سكر، حليب، بيض، زبدة، وغيرها.</p>
+
+                <h3>كيف تضيف مكون؟</h3>
+                <p>اكتب اسم المكون، ثم حجم العبوة اللي تشتريها (مثلاً: 1 كيلوجرام) وسعرها (مثلاً: 5 ريال). البرنامج يحسب تكلفة كل جرام تلقائياً.</p>
+
+                <h3>نصيحة مهمة</h3>
+                <p>حدّث أسعار المكونات كل ما تغيرت في السوق. هذا يضمن إن تسعيرك دقيق ومحدّث.</p>
+
+                <div class="help-section__visual">
+                    <svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" class="help-illustration" role="img" aria-label="مثال بطاقة مكون">
+                        <rect x="10" y="10" width="180" height="100" rx="12" fill="#f5f0e8" stroke="#2d5016" stroke-width="1.5"/>
+                        <text x="100" y="40" text-anchor="middle" fill="#2d5016" font-size="14" font-family="Tajawal, sans-serif">🧂 طحين</text>
+                        <text x="100" y="65" text-anchor="middle" fill="#666" font-size="11" font-family="Tajawal, sans-serif">1 كيلوجرام — 5 ريال</text>
+                        <rect x="55" y="78" width="40" height="22" rx="4" fill="#2d5016"/>
+                        <text x="75" y="93" text-anchor="middle" fill="white" font-size="9" font-family="Tajawal, sans-serif">تعديل</text>
+                        <rect x="105" y="78" width="40" height="22" rx="4" fill="white" stroke="#c0392b" stroke-width="1"/>
+                        <text x="125" y="93" text-anchor="middle" fill="#c0392b" font-size="9" font-family="Tajawal, sans-serif">حذف</text>
+                    </svg>
+                </div>
+            </div>
+        </details>
+
+        <!-- القسم ٢: الوصفات -->
+        <details class="help-section">
+            <summary class="help-section__title">
+                <span class="help-section__icon" aria-hidden="true">📝</span>
+                <span>الوصفات</span>
+            </summary>
+            <div class="help-section__content">
+                <h3>ما هي صفحة الوصفات؟</h3>
+                <p>هنا تنشئ وصفاتك وتربطها بالمكونات. كل وصفة فيها: الاسم، عدد الحصص، وقت التحضير والطبخ، ومصدر الطاقة (كهرباء أو غاز).</p>
+
+                <h3>كيف تضيف مكونات لوصفة؟</h3>
+                <p>بعد إنشاء الوصفة، اضغط زر "المكونات" في البطاقة. اختر المكون من القائمة، حدد الكمية بالوحدة المناسبة (جرام، مليلتر، حبة)، واضغط "إضافة".</p>
+
+                <h3>قيم التسعير</h3>
+                <p>كل وصفة فيها قيم تسعير خاصة: قيمة ساعة عملك، تعرفة الكهرباء، وسعر الغاز. تبدأ بقيم افتراضية معقولة، وتقدر تعدلها لكل وصفة حسب الحاجة (مثل الشغل الليلي اللي يستحق قيمة ساعة أعلى).</p>
+
+                <h3>التكاليف الإضافية</h3>
+                <p>لا تنسَ تضيف تكاليف التغليف والتوصيل وأي مصاريف أخرى. كثير من الأسر المنتجة تنسى هذي التكاليف وتخسر بدون ما تدري!</p>
+
+                <div class="help-section__visual">
+                    <svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" class="help-illustration" role="img" aria-label="مثال وصفة">
+                        <rect x="10" y="10" width="180" height="100" rx="12" fill="#f5f0e8" stroke="#2d5016" stroke-width="1.5"/>
+                        <text x="100" y="35" text-anchor="middle" fill="#2d5016" font-size="14" font-weight="bold" font-family="Tajawal, sans-serif">📝 كيكة شوكولاتة</text>
+                        <text x="100" y="55" text-anchor="middle" fill="#666" font-size="10" font-family="Tajawal, sans-serif">12 حصة — 20 د تحضير — 40 د طبخ</text>
+                        <text x="100" y="75" text-anchor="middle" fill="#666" font-size="10" font-family="Tajawal, sans-serif">طحين 200 جرام + سكر 100 جرام</text>
+                        <text x="100" y="95" text-anchor="middle" fill="#2d5016" font-size="10" font-family="Tajawal, sans-serif">تغليف 3 ر — توصيل 10 ر</text>
+                    </svg>
+                </div>
+            </div>
+        </details>
+
+        <!-- القسم ٣: التسعير -->
+        <details class="help-section">
+            <summary class="help-section__title">
+                <span class="help-section__icon" aria-hidden="true">🧮</span>
+                <span>التسعير</span>
+            </summary>
+            <div class="help-section__content">
+                <h3>ما هي صفحة التسعير؟</h3>
+                <p>هنا تعرف السعر الحقيقي لوصفتك. اختر الوصفة، حدد نسبة الربح اللي تبغاها، واضغط "احسب". البرنامج يحسب لك كل شي تلقائياً.</p>
+
+                <h3>ماذا يحسب البرنامج؟</h3>
+                <p>يحسب أربعة أشياء ويجمعها:</p>
+                <p><strong>تكلفة المواد الخام:</strong> كم كلفتك المكونات بالضبط (مثلاً: 200 جرام طحين من كيس 1 كيلو بـ 5 ريال = 1 ريال).</p>
+                <p><strong>تكلفة الطاقة:</strong> كم استهلك الفرن كهرباء أو غاز أثناء الطبخ.</p>
+                <p><strong>قيمة وقتك:</strong> وقت التحضير والطبخ مضروب في قيمة ساعة عملك. وقتك له قيمة!</p>
+                <p><strong>التكاليف الإضافية:</strong> التغليف والتوصيل وأي مصاريف أخرى.</p>
+
+                <h3>نسبة تكلفة المواد الخام</h3>
+                <p>مؤشر يقيس كم نسبة المواد الخام من سعر البيع. النسب المناسبة للأسر المنتجة:</p>
+                <p>🔵 أقل من 30% — منخفضة (راجع سعرك)</p>
+                <p>🟢 30% إلى 55% — ممتازة</p>
+                <p>🟡 55% إلى 65% — مقبولة</p>
+                <p>🔴 أكثر من 65% — عالية (راجع المكونات أو السعر)</p>
+
+                <h3>صورة للعميل</h3>
+                <p>بعد الحساب، اضغط "صورة للعميل" لتنزيل صورة جاهزة ترسلها لعميلك عبر واتساب. الصورة فيها السعر فقط — بدون تفاصيل التكلفة الداخلية.</p>
+
+                <h3>المقارنة</h3>
+                <p>تقدر تحسب عدة وصفات وتضيفها للمقارنة عشان تشوف أي وصفة أكثر ربحاً.</p>
+
+                <div class="help-section__visual">
+                    <svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg" class="help-illustration" role="img" aria-label="مثال نتيجة تسعير">
+                        <rect x="10" y="10" width="180" height="120" rx="12" fill="#e8f5e9" stroke="#2d5016" stroke-width="1.5"/>
+                        <text x="100" y="35" text-anchor="middle" fill="#666" font-size="10" font-family="Tajawal, sans-serif">ستكسب من كل حصة</text>
+                        <text x="100" y="65" text-anchor="middle" fill="#2d5016" font-size="24" font-weight="bold" font-family="Tajawal, sans-serif">4.24 ريال</text>
+                        <line x1="40" y1="80" x2="160" y2="80" stroke="#ccc" stroke-width="1"/>
+                        <text x="100" y="100" text-anchor="middle" fill="#666" font-size="10" font-family="Tajawal, sans-serif">السعر الكامل: 56.97 ريال</text>
+                        <text x="100" y="118" text-anchor="middle" fill="#666" font-size="10" font-family="Tajawal, sans-serif">سعر الحصة: 14.24 ريال</text>
+                    </svg>
+                </div>
+            </div>
+        </details>
+
+        <!-- القسم ٤: قائمة التسوق -->
+        <details class="help-section">
+            <summary class="help-section__title">
+                <span class="help-section__icon" aria-hidden="true">🛒</span>
+                <span>قائمة التسوق</span>
+            </summary>
+            <div class="help-section__content">
+                <h3>ما هي قائمة التسوق؟</h3>
+                <p>لو عندك عدة طلبات (مثلاً: 2 كيكة + 1 براونيز + 3 علب كوكيز)، هذي الصفحة تجمع لك كل المكونات في قائمة وحدة مع التكلفة الإجمالية.</p>
+
+                <h3>كيف تستخدمها؟</h3>
+                <p>اختر الوصفة من القائمة، حدد الكمية (كم مرة تبغى تسويها)، واضغط "أضف". كرر لكل وصفة تبغاها. القائمة تتحدث تلقائياً.</p>
+
+                <h3>النسخ والحفظ</h3>
+                <p><strong>نسخ القائمة:</strong> ينسخ القائمة كنص تقدر تلصقه في واتساب أو ملاحظاتك.</p>
+                <p><strong>حفظ القائمة:</strong> يحفظها باسم (مثل "طلبات الخميس") وتقدر ترجع لها لاحقاً.</p>
+
+                <div class="help-section__visual">
+                    <svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" class="help-illustration" role="img" aria-label="مثال قائمة تسوق">
+                        <rect x="10" y="10" width="180" height="100" rx="12" fill="#f5f0e8" stroke="#2d5016" stroke-width="1.5"/>
+                        <text x="100" y="30" text-anchor="middle" fill="#2d5016" font-size="12" font-weight="bold" font-family="Tajawal, sans-serif">🛒 قائمة التسوق</text>
+                        <text x="170" y="50" text-anchor="end" fill="#333" font-size="10" font-family="Tajawal, sans-serif">طحين: 1400 جرام</text>
+                        <text x="170" y="68" text-anchor="end" fill="#333" font-size="10" font-family="Tajawal, sans-serif">سكر: 500 جرام</text>
+                        <text x="170" y="86" text-anchor="end" fill="#333" font-size="10" font-family="Tajawal, sans-serif">حليب: 1000 مليلتر</text>
+                        <text x="100" y="105" text-anchor="middle" fill="#2d5016" font-size="11" font-weight="bold" font-family="Tajawal, sans-serif">الإجمالي: 27.19 ريال</text>
+                    </svg>
+                </div>
+            </div>
+        </details>
+
+        <!-- القسم ٥: نصائح عامة -->
+        <details class="help-section">
+            <summary class="help-section__title">
+                <span class="help-section__icon" aria-hidden="true">💡</span>
+                <span>نصائح عامة للتسعير</span>
+            </summary>
+            <div class="help-section__content">
+                <h3>لا تنسَ وقتك</h3>
+                <p>كثير من الأسر المنتجة تحسب تكلفة المواد بس وتنسى إن وقتها له قيمة. لو قضيت 3 ساعات في تزيين كيكة، هذا شغل يستحق أجر!</p>
+
+                <h3>لا تنسَ التغليف والتوصيل</h3>
+                <p>العلب، الأشرطة، الستيكرات، وتكلفة التوصيل — كلها تكاليف حقيقية لازم تنحسب. بدونها ربحك يقل بدون ما تدري.</p>
+
+                <h3>قارن أسعارك بالسوق</h3>
+                <p>شوف أسعار المنافسين في انستقرام ومنصات التوصيل. لو سعرك أقل بكثير، ربما تقدر ترفعه. لو أعلى بكثير، فكر في ميزة تبرر الفرق (جودة، خدمة، تزيين).</p>
+
+                <h3>حدّث الأسعار دورياً</h3>
+                <p>أسعار المواد الخام تتغير. كل شهر أو شهرين، راجع أسعار مكوناتك في البرنامج وحدّثها. هذا يضمن إن تسعيرك يعكس التكلفة الحقيقية.</p>
+
+                <h3>ابدأ بربح 30%</h3>
+                <p>لو مو متأكد كم تحط ربح، ابدأ بـ 30%. هذي نسبة آمنة للبداية. بعد ما تعرف السوق وعملاءك أكثر، تقدر تعدلها.</p>
+
+                <div class="help-section__visual">
+                    <svg viewBox="0 0 200 80" xmlns="http://www.w3.org/2000/svg" class="help-illustration" role="img" aria-label="ملصق نصيحة">
+                        <rect x="10" y="10" width="180" height="60" rx="12" fill="#fff9c4" stroke="#f9a825" stroke-width="1.5"/>
+                        <text x="100" y="45" text-anchor="middle" fill="#f57f17" font-size="13" font-weight="bold" font-family="Tajawal, sans-serif">💡 سعّر بذكاء، واكسب بثقة</text>
+                    </svg>
+                </div>
+            </div>
+        </details>
+    </main>
+</body>
+</html>

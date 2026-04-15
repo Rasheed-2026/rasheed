@@ -1287,6 +1287,26 @@ button,
     border-block-end: none;
     padding: 0;
     margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    flex: 1;
+}
+
+/* مجموعة الروابط الرئيسية (على inline-start بعد الاسم) */
+.nav__main-links {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex-wrap: wrap;
+}
+
+/* رابط المساعدة منفصل على inline-end */
+.nav__help-link {
+    display: flex;
+    align-items: center;
 }
 
 /* === سهم الانتقال للصفحة التالية === */
@@ -1389,5 +1409,114 @@ button,
     padding-block: 0.35rem;
     padding-inline: 0.75rem;
     font-size: 0.85rem;
+}
+
+/* === صفحة المساعدة: أقسام قابلة للطي === */
+.help-section {
+    margin-block-end: 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background-color: var(--color-surface);
+}
+
+.help-section[open] {
+    border-color: var(--color-primary);
+}
+
+.help-section__title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding-block: 1rem;
+    padding-inline: 1.25rem;
+    cursor: pointer;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    background-color: #faf8f4;
+    list-style: none;
+}
+
+/* نخفي المثلث الافتراضي للمتصفح */
+.help-section__title::-webkit-details-marker {
+    display: none;
+}
+
+.help-section__title::marker {
+    content: "";
+}
+
+/* أيقونة المؤشر (سهم مخصص) — تلقائياً في نهاية السطر */
+.help-section__title::after {
+    margin-inline-start: auto;
+    font-size: 1rem;
+    color: var(--color-primary);
+}
+
+.help-section:not([open]) > .help-section__title::after {
+    content: "▾";
+}
+
+.help-section[open] > .help-section__title::after {
+    content: "▴";
+}
+
+.help-section__icon {
+    font-size: 1.4rem;
+    line-height: 1;
+}
+
+.help-section__content {
+    padding-block: 0.5rem 1.25rem;
+    padding-inline: 1.5rem;
+    line-height: 1.7;
+    color: var(--color-text);
+}
+
+.help-section__content h3 {
+    color: var(--color-primary);
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-block-start: 1.25rem;
+    margin-block-end: 0.5rem;
+}
+
+.help-section__content h3:first-child {
+    margin-block-start: 0.5rem;
+}
+
+.help-section__content p {
+    margin-block-end: 0.75rem;
+    color: var(--color-muted);
+}
+
+.help-section__content strong {
+    color: var(--color-text);
+}
+
+.help-section__visual {
+    margin-block-start: 1.25rem;
+    text-align: center;
+}
+
+.help-illustration {
+    inline-size: 100%;
+    max-inline-size: 300px;
+    block-size: auto;
+    display: block;
+    margin-inline: auto;
+}
+
+/* على الشاشات الصغيرة جداً: تقليل المسافات الداخلية */
+@media (max-width: 480px) {
+    .help-section__title {
+        padding-inline: 1rem;
+        font-size: 1rem;
+    }
+
+    .help-section__content {
+        padding-inline: 1rem;
+    }
 }
 
