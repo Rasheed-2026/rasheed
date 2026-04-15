@@ -1,92 +1,114 @@
 /*
   ============================================
-  ملف إدارة القوائم المحفوظة (قائمة التسوق)
+  ملف إدارة القوائم المحفوظة (Supabase)
   ============================================
-  هذا الملف مسؤول عن قراءة وحفظ وحذف
-  القوائم المحفوظة في localStorage.
-  لا يلمس DOM ولا يحسب أي شي — فقط بيانات.
-
-  شكل القائمة المحفوظة:
-    - id: نص فريد
-    - name: اسم القائمة (عربي)
-    - selections: [{ recipeId, quantity }]
-    - createdAt / updatedAt: تاريخ ISO
-
-  ملاحظة مهمة: لا نخزن المكونات المجمّعة ولا
-  التكاليف. نعيد حسابها عند الاستعادة عشان تعكس
-  أي تعديل على الأسعار أو الوصفات.
+  القوائم المحفوظة في جدول shopping_lists.
+  حقل selections مخزّن كـ JSONB في القاعدة،
+  فنقدر نمرّر المصفوفة مباشرة بدون JSON.stringify.
   ============================================
 */
 
 (function () {
-    const STORAGE_KEY = 'tasceer_shopping_lists';
-
-    // دالة داخلية: تكتب كامل قائمة القوائم المحفوظة في localStorage
-    function persistLists(lists) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(lists));
+    async function getCurrentUserId() {
+        const { data } = await window.supabaseClient.auth.getUser();
+        return data.user ? data.user.id : null;
     }
 
-    // ترجع كل القوائم المحفوظة. لو ما فيه شي أو البيانات تالفة، ترجع قائمة فاضية.
-    function getAllSavedLists() {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) {
-            return [];
-        }
-        try {
-            return JSON.parse(raw);
-        } catch (e) {
-            return [];
-        }
+    // يحوّل صف القاعدة إلى كائن التطبيق
+    function dbToList(row) {
+        if (!row) return null;
+        return {
+            id: row.id,
+            name: row.name,
+            selections: row.selections || [],
+            createdAt: row.created_at,
+            updatedAt: row.updated_at
+        };
     }
 
-    // ترجع قائمة محفوظة واحدة حسب رقمها، أو null لو ما لقيناها
-    function getSavedListById(id) {
-        if (!id) {
+    // ترجع كل القوائم المحفوظة للمستخدم الحالي
+    async function getAllSavedLists() {
+        const userId = await getCurrentUserId();
+        if (!userId) return [];
+
+        const { data, error } = await window.supabaseClient
+            .from('shopping_lists')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('getAllSavedLists error:', error);
+            return [];
+        }
+        return (data || []).map(dbToList);
+    }
+
+    // ترجع قائمة محفوظة واحدة
+    async function getSavedListById(id) {
+        if (!id) return null;
+        const { data, error } = await window.supabaseClient
+            .from('shopping_lists')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (error || !data) {
+            if (error && error.code !== 'PGRST116') {
+                console.error('getSavedListById error:', error);
+            }
             return null;
         }
-        const lists = getAllSavedLists();
-        const found = lists.find(function (item) {
-            return item.id === id;
-        });
-        return found || null;
+        return dbToList(data);
     }
 
-    // تحفظ قائمة جديدة باسم مع مصفوفة الاختيارات.
-    // نتحقق من أن الاسم غير فاضي بعد trim.
-    function saveList(name, selections) {
+    // تحفظ قائمة جديدة باسم + مصفوفة اختيارات
+    async function saveList(name, selections) {
         const trimmed = (name || '').trim();
         if (!trimmed) {
             throw new Error('اسم القائمة مطلوب');
         }
 
-        const now = new Date().toISOString();
-        const newList = {
-            id: crypto.randomUUID(),
-            name: trimmed,
-            // ننسخ المصفوفة عشان ما نربط المرجع مع الحالة الجارية
-            selections: (selections || []).map(function (s) {
-                return { recipeId: s.recipeId, quantity: Number(s.quantity) };
-            }),
-            createdAt: now,
-            updatedAt: now
-        };
+        const userId = await getCurrentUserId();
+        if (!userId) {
+            throw new Error('يجب تسجيل الدخول أولاً');
+        }
 
-        const lists = getAllSavedLists();
-        lists.push(newList);
-        persistLists(lists);
-        return newList;
+        // ننسخ المصفوفة بشكل نظيف قبل الحفظ
+        const normalized = (selections || []).map(function (s) {
+            return { recipeId: s.recipeId, quantity: Number(s.quantity) };
+        });
+
+        const { data, error } = await window.supabaseClient
+            .from('shopping_lists')
+            .insert({
+                user_id: userId,
+                name: trimmed,
+                selections: normalized
+            })
+            .select()
+            .single();
+
+        if (error) {
+            console.error('saveList error:', error);
+            throw new Error('تعذر حفظ القائمة. حاول مرة أخرى.');
+        }
+        return dbToList(data);
     }
 
     // تحذف قائمة محفوظة حسب الرقم
-    function deleteSavedList(id) {
-        if (!id) {
-            throw new Error('رقم القائمة مطلوب');
+    async function deleteSavedList(id) {
+        if (!id) throw new Error('رقم القائمة مطلوب');
+
+        const { error } = await window.supabaseClient
+            .from('shopping_lists')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            console.error('deleteSavedList error:', error);
+            throw new Error('تعذر حذف القائمة. حاول مرة أخرى.');
         }
-        const lists = getAllSavedLists();
-        const filtered = lists.filter(function (item) {
-            return item.id !== id;
-        });
-        persistLists(filtered);
     }
 
     window.tasceerShoppingLists = {

@@ -66,10 +66,22 @@ function formatEnergySource(value) {
     return 'بدون';
 }
 
-// === عرض قائمة الوصفات ===
-function renderRecipes() {
+// === عرض قائمة الوصفات (async — يجيب من Supabase) ===
+async function renderRecipes() {
     const listContainer = document.getElementById('recipes-list');
-    const recipes = recipesApi.getAllRecipes();
+
+    // مؤشر تحميل أثناء الانتظار
+    listContainer.innerHTML = '';
+    const loading = document.createElement('p');
+    loading.className = 'loading-message';
+    loading.textContent = 'جاري التحميل...';
+    listContainer.appendChild(loading);
+
+    // نجيب الوصفات والمكونات بالتوازي لتسريع العرض
+    const [recipes, allIngredients] = await Promise.all([
+        recipesApi.getAllRecipes(),
+        ingredientsApi.getAllIngredients()
+    ]);
 
     listContainer.innerHTML = '';
 
@@ -80,9 +92,6 @@ function renderRecipes() {
         listContainer.appendChild(empty);
         return;
     }
-
-    // نجلب قائمة المكونات المتاحة مرة وحدة لكل عملية render
-    const allIngredients = ingredientsApi.getAllIngredients();
 
     recipes.forEach(function (recipe) {
         const card = document.createElement('div');
@@ -216,8 +225,11 @@ function buildIngredientsSection(recipe, allIngredients) {
             const label = document.createElement('span');
             label.className = 'recipe-ingredients__label';
 
-            // نبحث عن المكون الأصلي. لو انحذف، نعرض ملاحظة بالأحمر
-            const ingredient = ingredientsApi.getIngredientById(entry.ingredientId);
+            // نبحث عن المكون الأصلي في القائمة المحمّلة مسبقاً.
+            // لو انحذف، نعرض ملاحظة بالأحمر.
+            const ingredient = allIngredients.find(function (ing) {
+                return ing.id === entry.ingredientId;
+            });
             if (!ingredient) {
                 const missing = document.createElement('span');
                 missing.className = 'recipe-ingredients__missing';
@@ -373,8 +385,8 @@ function formatExtraCostsLine(recipe) {
 }
 
 // يحوّل النموذج إلى وضع التعديل ويعبّيه بقيم الوصفة
-function enterEditMode(id) {
-    const recipe = recipesApi.getRecipeById(id);
+async function enterEditMode(id) {
+    const recipe = await recipesApi.getRecipeById(id);
     if (!recipe) {
         return;
     }
@@ -436,7 +448,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const cancelBtn = document.getElementById('recipe-cancel-btn');
 
     // === إضافة أو تعديل وصفة ===
-    form.addEventListener('submit', function (event) {
+    form.addEventListener('submit', async function (event) {
         // نوقف السلوك الافتراضي للمتصفح فوراً
         event.preventDefault();
 
@@ -498,22 +510,34 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        // نقرر: هل نضيف أو نعدّل بناءً على المتغير editingRecipeId
-        if (editingRecipeId === null) {
-            recipesApi.addRecipe(name, servings, prepTime, cookTime, energySource,
-                hourlyRate, electricityRate, gasCylinderPrice,
-                packagingCost, deliveryCost, otherCost);
-            form.reset();
-            fillPricingInputsWithDefaults();
-            fillExtraCostInputsWithDefaults();
-        } else {
-            recipesApi.updateRecipe(editingRecipeId, name, servings, prepTime, cookTime, energySource,
-                hourlyRate, electricityRate, gasCylinderPrice,
-                packagingCost, deliveryCost, otherCost);
-            exitEditMode();
-        }
+        const submitBtn = document.getElementById('recipe-submit-btn');
+        const originalText = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'جاري الحفظ...';
 
-        renderRecipes();
+        try {
+            if (editingRecipeId === null) {
+                await recipesApi.addRecipe(name, servings, prepTime, cookTime, energySource,
+                    hourlyRate, electricityRate, gasCylinderPrice,
+                    packagingCost, deliveryCost, otherCost);
+                form.reset();
+                fillPricingInputsWithDefaults();
+                fillExtraCostInputsWithDefaults();
+            } else {
+                await recipesApi.updateRecipe(editingRecipeId, name, servings, prepTime, cookTime, energySource,
+                    hourlyRate, electricityRate, gasCylinderPrice,
+                    packagingCost, deliveryCost, otherCost);
+                exitEditMode();
+            }
+            await renderRecipes();
+        } catch (err) {
+            alert(err.message || 'تعذر حفظ الوصفة.');
+        } finally {
+            submitBtn.disabled = false;
+            if (submitBtn.textContent === 'جاري الحفظ...') {
+                submitBtn.textContent = originalText;
+            }
+        }
     });
 
     // زر إلغاء التعديل
@@ -522,7 +546,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // === أحداث البطاقات عبر event delegation ===
-    listContainer.addEventListener('click', function (event) {
+    listContainer.addEventListener('click', async function (event) {
         const target = event.target;
         if (!target.matches('button[data-action]')) {
             return;
@@ -541,13 +565,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
             openIngredientsByRecipe[id] = !openIngredientsByRecipe[id];
-            renderRecipes();
+            await renderRecipes();
             return;
         }
 
-        // === تعديل الوصفة (من الأزرار الرئيسية) ===
+        // === تعديل الوصفة ===
         if (action === 'edit') {
-            enterEditMode(target.dataset.id);
+            await enterEditMode(target.dataset.id);
             return;
         }
 
@@ -555,25 +579,24 @@ document.addEventListener('DOMContentLoaded', function () {
         if (action === 'delete') {
             const id = target.dataset.id;
             const confirmed = confirm('هل أنت متأكد من حذف هذه الوصفة؟');
-            if (confirmed) {
-                // لو كنا نعدّل نفس الوصفة اللي تنحذف، نخرج من وضع التعديل
+            if (!confirmed) return;
+            try {
                 if (editingRecipeId === id) {
                     exitEditMode();
                 }
-                // ننظّف حالة الفتح المرتبطة بهذه الوصفة
                 delete openIngredientsByRecipe[id];
-                recipesApi.deleteRecipe(id);
-                renderRecipes();
+                await recipesApi.deleteRecipe(id);
+                await renderRecipes();
+            } catch (err) {
+                alert(err.message || 'تعذر حذف الوصفة.');
             }
             return;
         }
 
         // === إضافة مكون إلى هذه الوصفة ===
         if (action === 'add-ingredient') {
-            if (!recipeId) {
-                return;
-            }
-            // نقرأ المدخلات من نفس البطاقة فقط (مو من بطاقة ثانية)
+            if (!recipeId) return;
+
             const selectIng = card.querySelector('select[data-field="ingredient"]');
             const amountInput = card.querySelector('input[data-field="amount"]');
             const unitSelect = card.querySelector('select[data-field="unit"]');
@@ -591,38 +614,32 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            // قاعدة: ما نسمح بتكرار نفس المكون داخل نفس الوصفة
-            const recipe = recipesApi.getRecipeById(recipeId);
-            const alreadyAdded = (recipe && recipe.ingredients || []).some(function (entry) {
-                return entry.ingredientId === ingredientId;
-            });
-            if (alreadyAdded) {
-                alert('هذا المكون مضاف بالفعل إلى الوصفة. احذفه أولاً إذا أردت تغييره.');
-                return;
+            // القيد الفريد في القاعدة يمنع التكرار — نعرض رسالة
+            // مفهومة لو رجع خطأ 23505.
+            try {
+                await recipesApi.addIngredientToRecipe(recipeId, ingredientId, amount, unit);
+                openIngredientsByRecipe[recipeId] = true;
+                await renderRecipes();
+            } catch (err) {
+                alert(err.message || 'تعذر إضافة المكون.');
             }
-
-            recipesApi.addIngredientToRecipe(recipeId, ingredientId, amount, unit);
-            // نبقي قسم المكونات مفتوحاً بعد إعادة الرسم ليشوف المستخدم إضافته
-            openIngredientsByRecipe[recipeId] = true;
-            renderRecipes();
             return;
         }
 
         // === إزالة مكون من هذه الوصفة ===
         if (action === 'remove-ingredient') {
-            if (!recipeId) {
-                return;
-            }
+            if (!recipeId) return;
             const ingredientId = target.dataset.ingredientId;
-            if (!ingredientId) {
-                return;
-            }
+            if (!ingredientId) return;
+
             const confirmed = confirm('هل تريد إزالة هذا المكون من الوصفة؟');
-            if (confirmed) {
-                recipesApi.removeIngredientFromRecipe(recipeId, ingredientId);
-                // نبقي القسم مفتوحاً بعد الإزالة
+            if (!confirmed) return;
+            try {
+                await recipesApi.removeIngredientFromRecipe(recipeId, ingredientId);
                 openIngredientsByRecipe[recipeId] = true;
-                renderRecipes();
+                await renderRecipes();
+            } catch (err) {
+                alert(err.message || 'تعذر إزالة المكون.');
             }
             return;
         }

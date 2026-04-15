@@ -1,148 +1,169 @@
 /*
   ============================================
-  ملف إدارة المكونات
+  ملف إدارة المكونات (Supabase)
   ============================================
-  هذا الملف يحتوي على كل ما يتعلق بحفظ
-  وقراءة وحذف المكونات من ذاكرة المتصفح
-  (localStorage)، بالإضافة إلى دوال تنسيق
-  بسيطة لعرض الحجم والسعر بشكل مفهوم.
-  هذا الملف ما يلمس DOM إطلاقاً.
+  كل القراءة والكتابة الآن على جدول ingredients
+  في Supabase عبر window.supabaseClient. كل دوال
+  البيانات صارت async وترجع Promises.
+  الملف ما يلمس DOM — فقط بيانات + تنسيق عرض.
   ============================================
 */
 
 (function () {
-    // مفتاح التخزين في ذاكرة المتصفح
-    const STORAGE_KEY = 'tasceer_ingredients';
-
-    // دالة داخلية: تحفظ كامل قائمة المكونات في localStorage
-    function saveIngredients(ingredients) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(ingredients));
+    // ===== مساعد: يرجع معرّف المستخدم الحالي من جلسة Supabase =====
+    async function getCurrentUserId() {
+        const { data } = await window.supabaseClient.auth.getUser();
+        return data.user ? data.user.id : null;
     }
 
-    // ترجع كل المكونات المحفوظة. لو ما فيه شي، ترجع قائمة فاضية.
-    function getAllIngredients() {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) {
-            return [];
-        }
-        try {
-            return JSON.parse(raw);
-        } catch (e) {
-            // لو البيانات تالفة لأي سبب، نرجع قائمة فاضية بدل ما نكسر البرنامج
-            return [];
-        }
-    }
-
-    // تضيف مكون جديد. تستقبل الوحدة اللي اختارها المستخدم
-    // وتحوّلها للوحدة الأساسية (جرام أو مليلتر) قبل الحفظ.
-    function addIngredient(name, packageAmount, unit, price) {
-        let packageWeightInGrams = Number(packageAmount);
-        let unitType = 'weight';
-
-        // تحويل الوحدة المختارة إلى الوحدة الأساسية
-        if (unit === 'g') {
-            unitType = 'weight';
-        } else if (unit === 'kg') {
-            packageWeightInGrams = packageWeightInGrams * 1000;
-            unitType = 'weight';
-        } else if (unit === 'ml') {
-            unitType = 'volume';
-        } else if (unit === 'l') {
-            packageWeightInGrams = packageWeightInGrams * 1000;
-            unitType = 'volume';
-        } else if (unit === 'piece') {
-            unitType = 'piece';
-        }
-
-        const newIngredient = {
-            id: crypto.randomUUID(),
-            name: name.trim(),
-            packageWeightInGrams: packageWeightInGrams,
-            unitType: unitType,
-            packagePrice: Number(price),
-            createdAt: new Date().toISOString()
+    // ===== تحويل صف من قاعدة البيانات إلى كائن جافاسكربت =====
+    // الأعمدة في القاعدة snake_case، والتطبيق يستخدم camelCase.
+    // أي تعديل هنا ينعكس على كل الصفحات، فلازم يكون دقيق.
+    function dbToIngredient(row) {
+        if (!row) return null;
+        return {
+            id: row.id,
+            name: row.name,
+            packageWeightInGrams: Number(row.package_weight_in_grams),
+            unitType: row.unit_type,
+            packagePrice: Number(row.package_price),
+            createdAt: row.created_at
         };
-
-        const ingredients = getAllIngredients();
-        ingredients.push(newIngredient);
-        saveIngredients(ingredients);
-
-        return newIngredient;
     }
 
-    // ترجع مكون واحد حسب رقمه التعريفي، أو null لو ما وجدته
-    function getIngredientById(id) {
-        const ingredients = getAllIngredients();
-        const found = ingredients.find(function (item) {
-            return item.id === id;
-        });
-        return found || null;
-    }
-
-    // تعدّل مكون موجود. تستخدم نفس منطق تحويل الوحدات
-    // المستخدم في addIngredient. لو ما وجدت المكون، ترمي خطأ.
-    function updateIngredient(id, name, packageAmount, unit, price) {
-        const ingredients = getAllIngredients();
-        const index = ingredients.findIndex(function (item) {
-            return item.id === id;
-        });
-
-        if (index === -1) {
-            throw new Error('المكون غير موجود: ' + id);
-        }
-
-        // نفس منطق تحويل الوحدات في addIngredient
-        let packageWeightInGrams = Number(packageAmount);
+    // ===== مساعد: يحوّل الكمية والوحدة إلى الوحدة الأساسية =====
+    // نستخدم نفس المنطق السابق: كيلو→جرام، لتر→مل، والبقية كما هي.
+    function toBaseUnit(packageAmount, unit) {
+        let value = Number(packageAmount);
         let unitType = 'weight';
 
         if (unit === 'g') {
             unitType = 'weight';
         } else if (unit === 'kg') {
-            packageWeightInGrams = packageWeightInGrams * 1000;
+            value = value * 1000;
             unitType = 'weight';
         } else if (unit === 'ml') {
             unitType = 'volume';
         } else if (unit === 'l') {
-            packageWeightInGrams = packageWeightInGrams * 1000;
+            value = value * 1000;
             unitType = 'volume';
         } else if (unit === 'piece') {
             unitType = 'piece';
         }
 
-        // نحدّث الحقول مع الإبقاء على id و createdAt
-        ingredients[index] = {
-            id: ingredients[index].id,
-            name: name.trim(),
-            packageWeightInGrams: packageWeightInGrams,
-            unitType: unitType,
-            packagePrice: Number(price),
-            createdAt: ingredients[index].createdAt,
-            updatedAt: new Date().toISOString()
-        };
-
-        saveIngredients(ingredients);
-        return ingredients[index];
+        return { value: value, unitType: unitType };
     }
 
-    // تحذف مكون حسب رقمه التعريفي
-    function deleteIngredient(id) {
-        const ingredients = getAllIngredients();
-        const filtered = ingredients.filter(function (item) {
-            return item.id !== id;
-        });
-        saveIngredients(filtered);
+    // ترجع كل المكونات الخاصة بالمستخدم الحالي.
+    // لو حصل أي خطأ، نعرضه في الكونسول ونرجع مصفوفة فاضية
+    // عشان ما نكسر الصفحة.
+    async function getAllIngredients() {
+        const userId = await getCurrentUserId();
+        if (!userId) return [];
+
+        const { data, error } = await window.supabaseClient
+            .from('ingredients')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('getAllIngredients error:', error);
+            return [];
+        }
+        return (data || []).map(dbToIngredient);
     }
 
-    // === دوال تنسيق العرض ===
+    // ترجع مكون واحد حسب رقمه التعريفي، أو null لو ما وجدته.
+    async function getIngredientById(id) {
+        if (!id) return null;
+        const { data, error } = await window.supabaseClient
+            .from('ingredients')
+            .select('*')
+            .eq('id', id)
+            .single();
 
-    // تنسيق رقم: نشيل الأصفار الزائدة بعد الفاصلة (حد أقصى منزلتين)
+        if (error || !data) {
+            if (error && error.code !== 'PGRST116') {
+                console.error('getIngredientById error:', error);
+            }
+            return null;
+        }
+        return dbToIngredient(data);
+    }
+
+    // تضيف مكون جديد. ترجع المكون بعد حفظه (بالصيغة camelCase).
+    // ترمي خطأ برسالة عربية لو فشل الإدخال.
+    async function addIngredient(name, packageAmount, unit, price) {
+        const userId = await getCurrentUserId();
+        if (!userId) {
+            throw new Error('يجب تسجيل الدخول أولاً');
+        }
+
+        const base = toBaseUnit(packageAmount, unit);
+
+        const { data, error } = await window.supabaseClient
+            .from('ingredients')
+            .insert({
+                user_id: userId,
+                name: name.trim(),
+                package_weight_in_grams: base.value,
+                unit_type: base.unitType,
+                package_price: Number(price)
+            })
+            .select()
+            .single();
+
+        if (error) {
+            console.error('addIngredient error:', error);
+            throw new Error('تعذر حفظ المكون. حاول مرة أخرى.');
+        }
+        return dbToIngredient(data);
+    }
+
+    // تعدّل مكون موجود. تستخدم نفس منطق تحويل الوحدات.
+    async function updateIngredient(id, name, packageAmount, unit, price) {
+        const base = toBaseUnit(packageAmount, unit);
+
+        const { data, error } = await window.supabaseClient
+            .from('ingredients')
+            .update({
+                name: name.trim(),
+                package_weight_in_grams: base.value,
+                unit_type: base.unitType,
+                package_price: Number(price)
+            })
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) {
+            console.error('updateIngredient error:', error);
+            throw new Error('تعذر تعديل المكون. حاول مرة أخرى.');
+        }
+        return dbToIngredient(data);
+    }
+
+    // تحذف مكون حسب رقمه التعريفي.
+    async function deleteIngredient(id) {
+        const { error } = await window.supabaseClient
+            .from('ingredients')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            console.error('deleteIngredient error:', error);
+            throw new Error('تعذر حذف المكون. حاول مرة أخرى.');
+        }
+    }
+
+    // === دوال تنسيق العرض (تبقى متزامنة — لا تلمس البيانات) ===
+
     function formatNumber(num) {
         return Number(num.toFixed(2)).toString();
     }
 
-    // ترجع الكمية والوحدة المناسبة لعرض المكون للمستخدم
-    // (نفس المنطق المستخدم في formatPackageSize عشان نضمن
-    // أن البطاقة ونموذج التعديل يعرضان نفس الوحدة).
+    // ترجع الكمية والوحدة المناسبة لعرض المكون
     function getDisplayUnit(ingredient) {
         const base = ingredient.packageWeightInGrams;
         const type = ingredient.unitType;
@@ -185,8 +206,7 @@
         return String(amount);
     }
 
-    // نعرض كل الدوال مرة وحدة على كائن عام في window
-    // (ما نستخدم ES modules حالياً عشان نبقي الكود بسيط للمبتدئ)
+    // نعرض كل الدوال على كائن عام في window
     window.tasceerIngredients = {
         getAllIngredients: getAllIngredients,
         getIngredientById: getIngredientById,

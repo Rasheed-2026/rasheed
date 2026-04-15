@@ -1,32 +1,36 @@
 /*
   ============================================
-  ملف JavaScript الرئيسي
+  ملف JavaScript الرئيسي — صفحة المكونات
   ============================================
-  هذا الملف يربط الواجهة (HTML) مع منطق
-  المكونات. كل عمليات البيانات (جلب، إضافة،
-  تعديل، حذف، تنسيق العرض) موجودة في
-  ingredients.js، وهذا الملف فقط يقرأها من
-  window.tasceerIngredients ويتولى DOM والأحداث.
+  يربط الواجهة مع طبقة البيانات في ingredients.js.
+  بعد الهجرة إلى Supabase كل استدعاء بيانات صار async،
+  فكل الدوال اللي تستدعي البيانات صارت async أيضاً.
   ============================================
 */
 
 console.log('البرنامج جاهز');
 
-// مرجع مختصر للدوال المعرّفة في ingredients.js
 const ingredientsApi = window.tasceerIngredients;
 
-// متغير حالة وحيد: لو null = وضع الإضافة، لو فيه id = وضع التعديل
+// null = وضع الإضافة، غير ذلك = رقم المكون قيد التعديل
 let editingIngredientId = null;
 
-// تنسيق السعر مع كلمة "ريال"
 function formatPrice(price) {
     return Number(price.toFixed(2)).toString() + ' ريال';
 }
 
-// === عرض قائمة المكونات ===
-function renderIngredients() {
+// === عرض قائمة المكونات (async لأنها تجيب من Supabase) ===
+async function renderIngredients() {
     const listContainer = document.getElementById('ingredients-list');
-    const ingredients = ingredientsApi.getAllIngredients();
+
+    // مؤشر تحميل بسيط أثناء انتظار Supabase
+    listContainer.innerHTML = '';
+    const loading = document.createElement('p');
+    loading.className = 'loading-message';
+    loading.textContent = 'جاري التحميل...';
+    listContainer.appendChild(loading);
+
+    const ingredients = await ingredientsApi.getAllIngredients();
 
     listContainer.innerHTML = '';
 
@@ -39,7 +43,6 @@ function renderIngredients() {
     }
 
     ingredients.forEach(function (item) {
-        // بطاقة المكون كعنصر في شبكة (grid)
         const card = document.createElement('div');
         card.className = 'ingredient-card';
 
@@ -53,7 +56,6 @@ function renderIngredients() {
         const priceText = formatPrice(item.packagePrice);
         info.textContent = 'العبوة: ' + sizeText + ' — ' + priceText;
 
-        // مجموعة أزرار البطاقة (تعديل + حذف)
         const actions = document.createElement('div');
         actions.className = 'ingredient-card__actions';
 
@@ -84,18 +86,16 @@ function renderIngredients() {
     });
 }
 
-// === تبديل النموذج بين وضع الإضافة ووضع التعديل ===
+// === وضع التعديل ===
 
-// يحوّل النموذج إلى وضع التعديل ويعبّيه بقيم المكون
-function enterEditMode(id) {
-    const ingredient = ingredientsApi.getIngredientById(id);
+async function enterEditMode(id) {
+    const ingredient = await ingredientsApi.getIngredientById(id);
     if (!ingredient) {
         return;
     }
 
     editingIngredientId = id;
 
-    // نستعيد الوحدة بنفس منطق العرض في البطاقة
     const display = ingredientsApi.getDisplayUnit(ingredient);
 
     document.getElementById('ingredient-name').value = ingredient.name;
@@ -107,12 +107,10 @@ function enterEditMode(id) {
     document.getElementById('submit-btn').textContent = 'حفظ التعديلات';
     document.getElementById('cancel-edit-btn').hidden = false;
 
-    // نمرّر المستخدم لأعلى النموذج عشان يشوفه على الجوال
     const form = document.getElementById('add-ingredient-form');
     form.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-// يرجّع النموذج لوضع الإضافة ويفرّغه
 function exitEditMode() {
     editingIngredientId = null;
     document.getElementById('add-ingredient-form').reset();
@@ -121,7 +119,7 @@ function exitEditMode() {
     document.getElementById('cancel-edit-btn').hidden = true;
 }
 
-// === ربط الأحداث بعد ما تجهز الصفحة ===
+// === ربط الأحداث ===
 document.addEventListener('DOMContentLoaded', function () {
     renderIngredients();
 
@@ -129,9 +127,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const listContainer = document.getElementById('ingredients-list');
     const cancelBtn = document.getElementById('cancel-edit-btn');
 
-    // === إضافة أو تعديل مكون ===
-    form.addEventListener('submit', function (event) {
-        // نوقف السلوك الافتراضي للمتصفح فوراً
+    // إضافة أو تعديل مكون
+    form.addEventListener('submit', async function (event) {
         event.preventDefault();
 
         const name = document.getElementById('ingredient-name').value.trim();
@@ -139,7 +136,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const unit = document.getElementById('package-unit').value;
         const price = Number(document.getElementById('package-price').value);
 
-        // تحقق بسيط من صحة المدخلات (نفس منطق الإضافة)
         if (name === '') {
             alert('من فضلك اكتب اسم المكون.');
             return;
@@ -153,25 +149,38 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        // نقرر: هل نضيف أو نعدّل بناءً على المتغير editingIngredientId
-        if (editingIngredientId === null) {
-            ingredientsApi.addIngredient(name, amount, unit, price);
-            form.reset();
-        } else {
-            ingredientsApi.updateIngredient(editingIngredientId, name, amount, unit, price);
-            exitEditMode();
-        }
+        // نعطّل الزر أثناء الحفظ ليتضح للمستخدم إن فيه عملية جارية
+        const submitBtn = document.getElementById('submit-btn');
+        const originalText = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'جاري الحفظ...';
 
-        renderIngredients();
+        try {
+            if (editingIngredientId === null) {
+                await ingredientsApi.addIngredient(name, amount, unit, price);
+                form.reset();
+            } else {
+                await ingredientsApi.updateIngredient(editingIngredientId, name, amount, unit, price);
+                exitEditMode();
+            }
+            await renderIngredients();
+        } catch (err) {
+            alert(err.message || 'حدث خطأ غير متوقع.');
+        } finally {
+            submitBtn.disabled = false;
+            // نرجّع النص الأصلي لو ما تغيّر عبر exitEditMode
+            if (submitBtn.textContent === 'جاري الحفظ...') {
+                submitBtn.textContent = originalText;
+            }
+        }
     });
 
-    // زر إلغاء التعديل
     cancelBtn.addEventListener('click', function () {
         exitEditMode();
     });
 
-    // === أحداث التعديل والحذف عبر event delegation ===
-    listContainer.addEventListener('click', function (event) {
+    // أحداث التعديل والحذف عبر event delegation
+    listContainer.addEventListener('click', async function (event) {
         const target = event.target;
         if (!target.matches('button[data-action]')) {
             return;
@@ -181,19 +190,22 @@ document.addEventListener('DOMContentLoaded', function () {
         const id = target.dataset.id;
 
         if (action === 'edit') {
-            enterEditMode(id);
+            await enterEditMode(id);
             return;
         }
 
         if (action === 'delete') {
             const confirmed = confirm('هل أنت متأكد من حذف هذا المكون؟');
-            if (confirmed) {
-                // لو كنا نعدّل نفس المكون اللي ينحذف، نخرج من وضع التعديل
+            if (!confirmed) return;
+
+            try {
                 if (editingIngredientId === id) {
                     exitEditMode();
                 }
-                ingredientsApi.deleteIngredient(id);
-                renderIngredients();
+                await ingredientsApi.deleteIngredient(id);
+                await renderIngredients();
+            } catch (err) {
+                alert(err.message || 'تعذر حذف المكون.');
             }
         }
     });

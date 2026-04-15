@@ -68,14 +68,18 @@
 
     // === تكلفة المواد الخام ===
     // لكل مكون في الوصفة: (سعر العبوة ÷ وزن العبوة) × الكمية المستخدمة.
-    // المكونات المحذوفة (ما نقدر نلاقيها في قائمة المكونات)
-    // نتخطاها بدل ما نكسر الحساب.
-    function calculateMaterialsCost(recipe) {
+    // allIngredients: مصفوفة كل المكونات محمّلة مسبقاً من طبقة الواجهة.
+    // الملف هذا متزامن ١٠٠٪ — ما يلمس Supabase. الواجهة تجيب البيانات
+    // مسبقاً وتمررها لنا.
+    function calculateMaterialsCost(recipe, allIngredients) {
         const entries = (recipe && recipe.ingredients) || [];
+        const list = allIngredients || [];
         let total = 0;
 
         entries.forEach(function (entry) {
-            const ingredient = window.tasceerIngredients.getIngredientById(entry.ingredientId);
+            const ingredient = list.find(function (ing) {
+                return ing.id === entry.ingredientId;
+            });
             if (!ingredient) {
                 return;
             }
@@ -167,8 +171,9 @@
     // === إجمالي التكلفة الفعلية ===
     // يستخدم قيم الوصفة مباشرة. الإجمالي الآن يشمل التكاليف الإضافية.
     // المعادلة: الإجمالي = المواد + الطاقة + الوقت + التكاليف الإضافية
-    function calculateTotalCost(recipe) {
-        const materials = calculateMaterialsCost(recipe);
+    // allIngredients تُمرّر من الواجهة (لأنها محمّلة من Supabase).
+    function calculateTotalCost(recipe, allIngredients) {
+        const materials = calculateMaterialsCost(recipe, allIngredients);
         const energy = calculateEnergyCost(recipe);
         const time = calculateTimeCost(recipe);
         const extras = calculateExtraCosts(recipe);

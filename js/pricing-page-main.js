@@ -129,10 +129,10 @@ function showInlineMessage(text) {
     result.hidden = false;
 }
 
-// === تعبئة قائمة الوصفات في الـ <select> ===
-function populateRecipeSelect() {
+// === تعبئة قائمة الوصفات في الـ <select> (async من Supabase) ===
+async function populateRecipeSelect() {
     const select = document.getElementById('recipe-select');
-    const recipes = recipesApi.getAllRecipes();
+    const recipes = await recipesApi.getAllRecipes();
 
     // نحافظ على العنصر الأول (placeholder) ونزيل الباقي
     while (select.options.length > 1) {
@@ -282,6 +282,8 @@ function renderCalculationResult(calculation) {
     const breakdown = calculation.breakdown;
     const recipe = calculation.recipe;
     const entries = recipe.ingredients || [];
+    // المكونات محمّلة مسبقاً ومرفقة مع كائن الحساب
+    const allIngredients = calculation.allIngredients || [];
 
     // تكلفة المواد الخام
     sectionA.appendChild(buildCostRow('تكلفة المواد الخام', pricing.formatSAR(breakdown.materials)));
@@ -289,7 +291,9 @@ function renderCalculationResult(calculation) {
     const materialsDetails = document.createElement('div');
     materialsDetails.className = 'cost-row__details';
     entries.forEach(function (entry) {
-        const ingredient = ingredientsApi.getIngredientById(entry.ingredientId);
+        const ingredient = allIngredients.find(function (ing) {
+            return ing.id === entry.ingredientId;
+        });
         if (!ingredient) {
             const miss = document.createElement('div');
             miss.textContent = '• (مكون محذوف) — لم يُحسب';
@@ -529,9 +533,9 @@ function renderComparisonSection() {
     section.hidden = false;
 }
 
-// === الدالة الرئيسية: حساب الوصفة المختارة ===
-// ترجع كائن الحساب أو null إذا فيه خطأ (بعد عرض الرسالة).
-function performCalculation() {
+// === الدالة الرئيسية: حساب الوصفة المختارة (async) ===
+// ترجع كائن الحساب أو null إذا فيه خطأ.
+async function performCalculation() {
     const recipeSelect = document.getElementById('recipe-select');
     const recipeId = recipeSelect.value;
 
@@ -546,7 +550,12 @@ function performCalculation() {
         return null;
     }
 
-    const recipe = recipesApi.getRecipeById(recipeId);
+    // نجيب الوصفة مع مكوناتها وكل المكونات دفعة واحدة بالتوازي
+    const [recipe, allIngredients] = await Promise.all([
+        recipesApi.getRecipeById(recipeId),
+        ingredientsApi.getAllIngredients()
+    ]);
+
     if (!recipe) {
         alert('الوصفة غير موجودة.');
         return null;
@@ -565,16 +574,14 @@ function performCalculation() {
         return null;
     }
 
-    // لا توجد إعدادات عامة — نمرر الوصفة فقط والحسابات
-    // تقرأ قيم التسعير منها مباشرة (مع fallback للافتراضيات)
-    const breakdown = pricing.calculateTotalCost(recipe);
+    // نمرر allIngredients لطبقة الحسابات المتزامنة
+    const breakdown = pricing.calculateTotalCost(recipe, allIngredients);
 
-    // نفحص المكونات المحذوفة
+    // نفحص المكونات المحذوفة عبر البحث في القائمة المحمّلة
     const hasDeletedIngredients = entries.some(function (entry) {
-        return !ingredientsApi.getIngredientById(entry.ingredientId);
+        return !allIngredients.find(function (ing) { return ing.id === entry.ingredientId; });
     });
 
-    // نحسب السعر الواحد حسب الهامش المختار
     const sellingPrice = Math.round(breakdown.total * (1 + margin / 100) * 100) / 100;
     const perServing = recipe.servings > 0
         ? Math.round((sellingPrice / recipe.servings) * 100) / 100
@@ -584,6 +591,7 @@ function performCalculation() {
         recipeId: recipe.id,
         recipeName: recipe.name,
         recipe: recipe,
+        allIngredients: allIngredients,
         margin: margin,
         breakdown: breakdown,
         sellingPrice: sellingPrice,
@@ -677,8 +685,17 @@ function sanitizeFilename(name) {
 }
 
 // === ربط الأحداث بعد تجهيز الصفحة ===
-document.addEventListener('DOMContentLoaded', function () {
-    const count = populateRecipeSelect();
+document.addEventListener('DOMContentLoaded', async function () {
+    // مؤشر تحميل أثناء جلب الوصفات من Supabase
+    const resultArea = document.getElementById('calculation-result');
+    resultArea.hidden = false;
+    resultArea.innerHTML = '<p class="loading-message">جاري التحميل...</p>';
+
+    const count = await populateRecipeSelect();
+
+    // نخفي رسالة التحميل بعد جلب القائمة
+    resultArea.innerHTML = '';
+    resultArea.hidden = true;
 
     // لا توجد وصفات: نعطل النموذج ونعرض رسالة
     if (count === 0) {
@@ -707,10 +724,22 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // === تنفيذ الحساب عند الضغط على زر احسب ===
     const form = document.getElementById('pricing-form');
-    form.addEventListener('submit', function (event) {
+    form.addEventListener('submit', async function (event) {
         event.preventDefault();
-        const calc = performCalculation();
+
+        // نعرض مؤشر تحميل قصير أثناء جلب الوصفة والمكونات
+        const resultEl = document.getElementById('calculation-result');
+        resultEl.innerHTML = '<p class="loading-message">جاري الحساب...</p>';
+        resultEl.hidden = false;
+
+        const calc = await performCalculation();
         if (!calc) {
+            // لو مؤشر التحميل ما زال معروضاً (يعني alert ظهر لا showInlineMessage)
+            // نمسحه ونخفي القسم.
+            if (resultEl.innerHTML.indexOf('loading-message') !== -1) {
+                resultEl.innerHTML = '';
+                resultEl.hidden = true;
+            }
             return;
         }
         lastCalculated = calc;

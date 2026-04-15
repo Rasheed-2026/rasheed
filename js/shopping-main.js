@@ -17,6 +17,11 @@
     // الحالة الجارية: مصفوفة من { recipeId, quantity }
     let currentSelections = [];
 
+    // بيانات محمّلة من Supabase ومُحتفظ بها في الذاكرة لتجنب إعادة
+    // الجلب مع كل عملية رسم. نحدّثها يدوياً بعد كل عملية حفظ.
+    let cachedRecipes = [];
+    let cachedIngredients = [];
+
     // مراجع لعناصر الصفحة — نملأها عند DOMContentLoaded
     let recipeSelect;
     let quantityInput;
@@ -36,7 +41,7 @@
     let addRecipeSection;
     let noRecipesMessage;
 
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', async function () {
         // نجيب كل العناصر مرة وحدة
         recipeSelect = document.getElementById('recipe-select');
         quantityInput = document.getElementById('recipe-quantity');
@@ -56,20 +61,34 @@
         addRecipeSection = document.getElementById('add-recipe-section');
         noRecipesMessage = document.getElementById('no-recipes-message');
 
-        const recipes = window.tasceerRecipes.getAllRecipes();
+        // مؤشر تحميل بسيط في قسم الوصفات المختارة ريثما تصل البيانات
+        selectedList.innerHTML = '<p class="loading-message">جاري التحميل...</p>';
+        selectedSection.hidden = false;
+
+        // نجيب الوصفات والمكونات والقوائم المحفوظة بالتوازي
+        const [recipes, ingredients] = await Promise.all([
+            window.tasceerRecipes.getAllRecipes(),
+            window.tasceerIngredients.getAllIngredients()
+        ]);
+        cachedRecipes = recipes;
+        cachedIngredients = ingredients;
+
+        // نخفي مؤشر التحميل
+        selectedList.innerHTML = '';
+        selectedSection.hidden = true;
 
         // حالة فاضية: لا وصفات إطلاقاً
         if (recipes.length === 0) {
             addRecipeSection.hidden = true;
             noRecipesMessage.hidden = false;
-            // مع ذلك نعرض القوائم المحفوظة لو وجدت — قد تكون من قبل حذف الوصفات
-            renderSavedLists();
+            // مع ذلك نعرض القوائم المحفوظة لو وجدت
+            await renderSavedLists();
             return;
         }
 
         populateRecipeSelect(recipes);
         wireEvents();
-        renderSavedLists();
+        await renderSavedLists();
     });
 
     // تعبئة القائمة المنسدلة بكل الوصفات
@@ -155,7 +174,9 @@
             alert('لا توجد قائمة لنسخها');
             return;
         }
-        const result = window.tasceerShoppingAggregator.aggregateShoppingList(currentSelections);
+        const result = window.tasceerShoppingAggregator.aggregateShoppingList(
+            currentSelections, cachedRecipes, cachedIngredients
+        );
         const lines = ['قائمة التسوق:'];
         result.items.forEach(function (item) {
             const qtyText = item.totalQuantity + ' ' + item.baseUnitLabel;
@@ -180,7 +201,7 @@
     }
 
     // حفظ القائمة الحالية باسم
-    function handleSaveList() {
+    async function handleSaveList() {
         if (currentSelections.length === 0) {
             alert('لا توجد وصفات لحفظها');
             return;
@@ -192,8 +213,8 @@
             return;
         }
         try {
-            window.tasceerShoppingLists.saveList(name, currentSelections);
-            renderSavedLists();
+            await window.tasceerShoppingLists.saveList(name, currentSelections);
+            await renderSavedLists();
             showFeedback('تم حفظ القائمة');
         } catch (err) {
             alert(err.message || 'تعذر الحفظ');
@@ -201,7 +222,7 @@
     }
 
     // التعامل مع أزرار الاستعادة والحذف داخل بطاقات القوائم المحفوظة
-    function handleSavedListsClick(e) {
+    async function handleSavedListsClick(e) {
         const loadBtn = e.target.closest('[data-action="load-saved"]');
         const delBtn = e.target.closest('[data-action="delete-saved"]');
 
@@ -209,7 +230,7 @@
             const id = loadBtn.getAttribute('data-list-id');
             const ok = confirm('هل تريد استعادة هذه القائمة؟ سيتم استبدال الوصفات المختارة الحالية.');
             if (!ok) return;
-            const saved = window.tasceerShoppingLists.getSavedListById(id);
+            const saved = await window.tasceerShoppingLists.getSavedListById(id);
             if (!saved) return;
             currentSelections = (saved.selections || []).map(function (s) {
                 return { recipeId: s.recipeId, quantity: Number(s.quantity) };
@@ -223,8 +244,12 @@
             const id = delBtn.getAttribute('data-list-id');
             const ok = confirm('هل تريد حذف هذه القائمة؟');
             if (!ok) return;
-            window.tasceerShoppingLists.deleteSavedList(id);
-            renderSavedLists();
+            try {
+                await window.tasceerShoppingLists.deleteSavedList(id);
+                await renderSavedLists();
+            } catch (err) {
+                alert(err.message || 'تعذر حذف القائمة.');
+            }
         }
     }
 
@@ -241,7 +266,8 @@
         selectedList.innerHTML = '';
 
         currentSelections.forEach(function (sel) {
-            const recipe = window.tasceerRecipes.getRecipeById(sel.recipeId);
+            // نقرأ من الكاش المحمّلة في بداية الصفحة بدلاً من استدعاء async
+            const recipe = cachedRecipes.find(function (r) { return r.id === sel.recipeId; });
             const row = document.createElement('div');
             row.className = 'shopping-selected-row';
 
@@ -274,7 +300,9 @@
         }
         resultSection.hidden = false;
 
-        const result = window.tasceerShoppingAggregator.aggregateShoppingList(currentSelections);
+        const result = window.tasceerShoppingAggregator.aggregateShoppingList(
+            currentSelections, cachedRecipes, cachedIngredients
+        );
 
         // التحذيرات (تكرارات نشيلها)
         warningsBox.innerHTML = '';
@@ -330,8 +358,8 @@
     }
 
     // يعرض بطاقات القوائم المحفوظة. يخفي القسم لو فاضي.
-    function renderSavedLists() {
-        const lists = window.tasceerShoppingLists.getAllSavedLists();
+    async function renderSavedLists() {
+        const lists = await window.tasceerShoppingLists.getAllSavedLists();
         if (lists.length === 0) {
             savedSection.hidden = true;
             savedContainer.innerHTML = '';

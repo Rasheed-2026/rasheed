@@ -1,297 +1,311 @@
 /*
   ============================================
-  ملف إدارة الوصفات
+  ملف إدارة الوصفات (Supabase)
   ============================================
-  نفس فكرة ingredients.js لكن للوصفات.
-  كل عمليات الحفظ والقراءة من ذاكرة المتصفح
-  (localStorage) موجودة هنا، والملف ما يلمس
-  DOM إطلاقاً. التحقق من المدخلات مسؤولية
-  ملف الواجهة recipes-main.js.
+  الوصفات الآن في جدول recipes، ومكونات كل وصفة
+  في جدول مستقل recipe_ingredients. هذا الملف
+  يغلّف كل هذا ويرجع للكود العادي كائن وصفة
+  "مدمج" فيه حقل ingredients كمصفوفة — بنفس
+  الشكل القديم — ليقل تأثير التغيير على باقي
+  الملفات.
+
+  كل الدوال async. أسماء الأعمدة في القاعدة
+  snake_case، والتطبيق camelCase، ولذا نستخدم
+  دوال تحويل dbToRecipe/dbToEntry.
   ============================================
 */
 
 (function () {
-    // مفتاح مختلف عن المكونات عشان تبقى البيانات مستقلة
-    const STORAGE_KEY = 'tasceer_recipes';
-
-    // دالة داخلية: تحفظ كامل قائمة الوصفات في localStorage
-    function saveRecipes(recipes) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(recipes));
+    async function getCurrentUserId() {
+        const { data } = await window.supabaseClient.auth.getUser();
+        return data.user ? data.user.id : null;
     }
 
-    // ترجع كل الوصفات المحفوظة. لو ما فيه شي، ترجع قائمة فاضية.
-    function getAllRecipes() {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) {
-            return [];
-        }
-        try {
-            return JSON.parse(raw);
-        } catch (e) {
-            // لو البيانات تالفة، نرجع قائمة فاضية بدل ما نكسر البرنامج
-            return [];
-        }
-    }
-
-    // ترجع وصفة واحدة حسب رقمها التعريفي، أو null لو ما وجدتها
-    function getRecipeById(id) {
-        if (!id) {
-            throw new Error('رقم الوصفة مطلوب');
-        }
-        const recipes = getAllRecipes();
-        const found = recipes.find(function (item) {
-            return item.id === id;
-        });
-        return found || null;
-    }
-
-    // تضيف وصفة جديدة.
-    // شكل الوصفة الكامل الآن يحتوي على:
-    //   - name, servings, prepTimeMinutes, cookTimeMinutes, energySource
-    //   - ingredients[]
-    //   - hourlyRate: قيمة ساعة العمل لهذه الوصفة (ريال)
-    //   - electricityRate: تعرفة الكهرباء (هللة لكل كيلوواط ساعة)
-    //   - gasCylinderPrice: سعر أسطوانة الغاز (ريال)
-    //   - packagingCost: تكلفة التغليف للوصفة كاملة (ريال) — اختياري
-    //   - deliveryCost: تكلفة التوصيل للوصفة كاملة (ريال) — اختياري
-    //   - otherCost: أي تكاليف إضافية أخرى (ريال) — اختياري
-    // الحقول الإضافية كلها اختيارية. الوصفات القديمة قبل
-    // إضافتها لا تحتوي عليها، وطبقة الحسابات في pricing.js
-    // ترجع تلقائياً إلى 0 عبر ?? — بدون أي migration.
-    function addRecipe(name, servings, prepTime, cookTime, energySource, hourlyRate, electricityRate, gasCylinderPrice, packagingCost, deliveryCost, otherCost) {
-        // تحقق من أن التكاليف الإضافية أرقام غير سالبة (الصفر مسموح)
-        const pkg = Number(packagingCost);
-        const del = Number(deliveryCost);
-        const oth = Number(otherCost);
-        if (!(pkg >= 0)) {
-            throw new Error('تكلفة التغليف لازم تكون رقم صفر أو أكثر.');
-        }
-        if (!(del >= 0)) {
-            throw new Error('تكلفة التوصيل لازم تكون رقم صفر أو أكثر.');
-        }
-        if (!(oth >= 0)) {
-            throw new Error('التكاليف الأخرى لازم تكون رقم صفر أو أكثر.');
-        }
-
-        const newRecipe = {
-            id: crypto.randomUUID(),
-            name: name.trim(),
-            servings: Number(servings),
-            prepTimeMinutes: Number(prepTime),
-            cookTimeMinutes: Number(cookTime),
-            energySource: energySource,
-            hourlyRate: Number(hourlyRate),
-            electricityRate: Number(electricityRate),
-            gasCylinderPrice: Number(gasCylinderPrice),
-            packagingCost: pkg,
-            deliveryCost: del,
-            otherCost: oth,
-            ingredients: [],
-            createdAt: new Date().toISOString()
+    // ===== تحويل صف recipe_ingredients إلى كائن مصفوفة الوصفة =====
+    function dbToEntry(row) {
+        return {
+            ingredientId: row.ingredient_id,
+            quantity: Number(row.quantity),
+            displayUnit: row.display_unit
         };
-
-        const recipes = getAllRecipes();
-        recipes.push(newRecipe);
-        saveRecipes(recipes);
-
-        return newRecipe;
     }
 
-    // تعدّل الحقول الأساسية لوصفة موجودة.
-    // مهم: نحافظ على قائمة المكونات كما هي، لأنها
-    // ستمتلئ في الجلسة القادمة ولا نبغى نفقدها عند التعديل.
-    function updateRecipe(id, name, servings, prepTime, cookTime, energySource, hourlyRate, electricityRate, gasCylinderPrice, packagingCost, deliveryCost, otherCost) {
-        if (!id) {
-            throw new Error('رقم الوصفة مطلوب');
-        }
-
-        // تحقق من أن التكاليف الإضافية أرقام غير سالبة
-        const pkg = Number(packagingCost);
-        const del = Number(deliveryCost);
-        const oth = Number(otherCost);
-        if (!(pkg >= 0)) {
-            throw new Error('تكلفة التغليف لازم تكون رقم صفر أو أكثر.');
-        }
-        if (!(del >= 0)) {
-            throw new Error('تكلفة التوصيل لازم تكون رقم صفر أو أكثر.');
-        }
-        if (!(oth >= 0)) {
-            throw new Error('التكاليف الأخرى لازم تكون رقم صفر أو أكثر.');
-        }
-
-        const recipes = getAllRecipes();
-        const index = recipes.findIndex(function (item) {
-            return item.id === id;
-        });
-
-        if (index === -1) {
-            throw new Error('الوصفة غير موجودة: ' + id);
-        }
-
-        const existing = recipes[index];
-
-        recipes[index] = {
-            id: existing.id,
-            name: name.trim(),
-            servings: Number(servings),
-            prepTimeMinutes: Number(prepTime),
-            cookTimeMinutes: Number(cookTime),
-            energySource: energySource,
-            // قيم التسعير الخاصة بالوصفة
-            hourlyRate: Number(hourlyRate),
-            electricityRate: Number(electricityRate),
-            gasCylinderPrice: Number(gasCylinderPrice),
-            // التكاليف الإضافية
-            packagingCost: pkg,
-            deliveryCost: del,
-            otherCost: oth,
-            // نحافظ على المكونات السابقة بدون أي تغيير
-            ingredients: existing.ingredients || [],
-            createdAt: existing.createdAt,
-            updatedAt: new Date().toISOString()
+    // ===== تحويل صف recipes + قائمة مدخلاته إلى كائن جافاسكربت =====
+    function dbToRecipe(row, ingredientEntries) {
+        if (!row) return null;
+        return {
+            id: row.id,
+            name: row.name,
+            servings: Number(row.servings),
+            prepTimeMinutes: Number(row.prep_time_minutes),
+            cookTimeMinutes: Number(row.cook_time_minutes),
+            energySource: row.energy_source,
+            hourlyRate: Number(row.hourly_rate),
+            electricityRate: Number(row.electricity_rate),
+            gasCylinderPrice: Number(row.gas_cylinder_price),
+            packagingCost: Number(row.packaging_cost),
+            deliveryCost: Number(row.delivery_cost),
+            otherCost: Number(row.other_cost),
+            createdAt: row.created_at,
+            ingredients: (ingredientEntries || []).map(dbToEntry)
         };
-
-        saveRecipes(recipes);
-        return recipes[index];
     }
 
-    // تحذف وصفة حسب رقمها التعريفي
-    function deleteRecipe(id) {
-        if (!id) {
-            throw new Error('رقم الوصفة مطلوب');
-        }
-        const recipes = getAllRecipes();
-        const filtered = recipes.filter(function (item) {
-            return item.id !== id;
-        });
-        saveRecipes(filtered);
-    }
-
-    // دالة مساعدة: تحوّل الكمية من الوحدة اللي اختارها المستخدم
-    // إلى الوحدة الأساسية (جرام للوزن، مليلتر للحجم، كما هي للقطعة).
-    // نستخدم نفس قواعد التحويل الموجودة في ingredients.js
+    // ===== تحويل الكمية من وحدة المستخدم إلى الوحدة الأساسية =====
     function convertToBaseUnit(amount, unit) {
         const n = Number(amount);
         if (unit === 'kg' || unit === 'l') {
             return n * 1000;
         }
-        // g, ml, piece — تبقى كما هي
         return n;
     }
 
-    // تضيف مكوناً إلى وصفة معينة بكمية محددة.
-    // الكمية المخزّنة دائماً بالوحدة الأساسية، أما displayUnit
-    // فيحفظ الوحدة اللي اختارها المستخدم عشان نعرضها له لاحقاً.
-    function addIngredientToRecipe(recipeId, ingredientId, userAmount, userUnit) {
-        if (!recipeId) {
-            throw new Error('رقم الوصفة مطلوب');
+    // ترجع كل وصفات المستخدم مع مكوناتها.
+    // للتحسين: نجيب كل recipe_ingredients لكل الوصفات بطلب واحد
+    // ثم نجمّعها حسب recipe_id (بدل N+1 طلبات).
+    async function getAllRecipes() {
+        const userId = await getCurrentUserId();
+        if (!userId) return [];
+
+        // ١. كل الوصفات
+        const { data: recipeRows, error: recipesError } = await window.supabaseClient
+            .from('recipes')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false });
+
+        if (recipesError) {
+            console.error('getAllRecipes error:', recipesError);
+            return [];
         }
-        if (!ingredientId) {
-            throw new Error('رقم المكون مطلوب');
+        if (!recipeRows || recipeRows.length === 0) {
+            return [];
         }
 
-        const recipes = getAllRecipes();
-        const index = recipes.findIndex(function (r) {
-            return r.id === recipeId;
+        // ٢. كل recipe_ingredients دفعة وحدة
+        const recipeIds = recipeRows.map(function (r) { return r.id; });
+        const { data: entryRows, error: entriesError } = await window.supabaseClient
+            .from('recipe_ingredients')
+            .select('*')
+            .in('recipe_id', recipeIds);
+
+        if (entriesError) {
+            console.error('recipe_ingredients fetch error:', entriesError);
+            // نرجع الوصفات بدون مكونات بدل ما ننهار
+            return recipeRows.map(function (r) { return dbToRecipe(r, []); });
+        }
+
+        // ٣. نجمّع المدخلات حسب recipe_id
+        const byRecipeId = {};
+        (entryRows || []).forEach(function (entry) {
+            if (!byRecipeId[entry.recipe_id]) {
+                byRecipeId[entry.recipe_id] = [];
+            }
+            byRecipeId[entry.recipe_id].push(entry);
         });
-        if (index === -1) {
-            throw new Error('الوصفة غير موجودة: ' + recipeId);
-        }
 
-        // نتأكد أن المكون موجود فعلاً في قائمة المكونات
-        const ingredient = window.tasceerIngredients.getIngredientById(ingredientId);
-        if (!ingredient) {
-            throw new Error('المكون غير موجود: ' + ingredientId);
-        }
-
-        const recipe = recipes[index];
-        if (!recipe.ingredients) {
-            recipe.ingredients = [];
-        }
-
-        recipe.ingredients.push({
-            ingredientId: ingredientId,
-            quantity: convertToBaseUnit(userAmount, userUnit),
-            displayUnit: userUnit
+        return recipeRows.map(function (r) {
+            return dbToRecipe(r, byRecipeId[r.id] || []);
         });
-
-        saveRecipes(recipes);
-        return recipe;
     }
 
-    // تحذف مكوناً من وصفة. نفترض أن المكون ما يتكرر
-    // داخل نفس الوصفة (هذي قاعدة نفرضها في طبقة الواجهة).
-    function removeIngredientFromRecipe(recipeId, ingredientId) {
-        if (!recipeId) {
+    // ترجع وصفة واحدة مع مكوناتها.
+    async function getRecipeById(id) {
+        if (!id) {
             throw new Error('رقم الوصفة مطلوب');
         }
-        if (!ingredientId) {
-            throw new Error('رقم المكون مطلوب');
+
+        const { data: recipeRow, error: recipeError } = await window.supabaseClient
+            .from('recipes')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (recipeError || !recipeRow) {
+            if (recipeError && recipeError.code !== 'PGRST116') {
+                console.error('getRecipeById error:', recipeError);
+            }
+            return null;
         }
 
-        const recipes = getAllRecipes();
-        const index = recipes.findIndex(function (r) {
-            return r.id === recipeId;
-        });
-        if (index === -1) {
-            throw new Error('الوصفة غير موجودة: ' + recipeId);
+        const { data: entryRows, error: entriesError } = await window.supabaseClient
+            .from('recipe_ingredients')
+            .select('*')
+            .eq('recipe_id', id);
+
+        if (entriesError) {
+            console.error('recipe_ingredients fetch error:', entriesError);
+            return dbToRecipe(recipeRow, []);
         }
 
-        const recipe = recipes[index];
-        recipe.ingredients = (recipe.ingredients || []).filter(function (entry) {
-            return entry.ingredientId !== ingredientId;
-        });
-
-        saveRecipes(recipes);
-        return recipe;
+        return dbToRecipe(recipeRow, entryRows || []);
     }
 
-    // تحدّث كمية مكون داخل وصفة (غير مستخدمة حالياً في الواجهة
-    // لكن موجودة عشان تكون طبقة البيانات كاملة).
-    function updateIngredientInRecipe(recipeId, ingredientId, userAmount, userUnit) {
-        if (!recipeId) {
-            throw new Error('رقم الوصفة مطلوب');
-        }
-        if (!ingredientId) {
-            throw new Error('رقم المكون مطلوب');
+    // تضيف وصفة جديدة (بدون مكونات — تضاف لاحقاً عبر addIngredientToRecipe)
+    async function addRecipe(name, servings, prepTime, cookTime, energySource, hourlyRate, electricityRate, gasCylinderPrice, packagingCost, deliveryCost, otherCost) {
+        const userId = await getCurrentUserId();
+        if (!userId) {
+            throw new Error('يجب تسجيل الدخول أولاً');
         }
 
-        const recipes = getAllRecipes();
-        const rIndex = recipes.findIndex(function (r) {
-            return r.id === recipeId;
-        });
-        if (rIndex === -1) {
-            throw new Error('الوصفة غير موجودة: ' + recipeId);
+        // تحقق من التكاليف الإضافية
+        const pkg = Number(packagingCost);
+        const del = Number(deliveryCost);
+        const oth = Number(otherCost);
+        if (!(pkg >= 0)) throw new Error('تكلفة التغليف لازم تكون رقم صفر أو أكثر.');
+        if (!(del >= 0)) throw new Error('تكلفة التوصيل لازم تكون رقم صفر أو أكثر.');
+        if (!(oth >= 0)) throw new Error('التكاليف الأخرى لازم تكون رقم صفر أو أكثر.');
+
+        const { data, error } = await window.supabaseClient
+            .from('recipes')
+            .insert({
+                user_id: userId,
+                name: name.trim(),
+                servings: Number(servings),
+                prep_time_minutes: Number(prepTime),
+                cook_time_minutes: Number(cookTime),
+                energy_source: energySource,
+                hourly_rate: Number(hourlyRate),
+                electricity_rate: Number(electricityRate),
+                gas_cylinder_price: Number(gasCylinderPrice),
+                packaging_cost: pkg,
+                delivery_cost: del,
+                other_cost: oth
+            })
+            .select()
+            .single();
+
+        if (error) {
+            console.error('addRecipe error:', error);
+            throw new Error('تعذر حفظ الوصفة. حاول مرة أخرى.');
         }
-
-        const recipe = recipes[rIndex];
-        const entries = recipe.ingredients || [];
-        const eIndex = entries.findIndex(function (entry) {
-            return entry.ingredientId === ingredientId;
-        });
-        if (eIndex === -1) {
-            throw new Error('المكون غير موجود داخل الوصفة: ' + ingredientId);
-        }
-
-        entries[eIndex] = {
-            ingredientId: ingredientId,
-            quantity: convertToBaseUnit(userAmount, userUnit),
-            displayUnit: userUnit
-        };
-
-        recipe.ingredients = entries;
-        saveRecipes(recipes);
-        return recipe;
+        return dbToRecipe(data, []);
     }
 
-    // نعرض كل الدوال مرة وحدة على كائن عام في window
+    // تعدّل حقول وصفة موجودة. لا نلمس recipe_ingredients هنا.
+    async function updateRecipe(id, name, servings, prepTime, cookTime, energySource, hourlyRate, electricityRate, gasCylinderPrice, packagingCost, deliveryCost, otherCost) {
+        if (!id) throw new Error('رقم الوصفة مطلوب');
+
+        const pkg = Number(packagingCost);
+        const del = Number(deliveryCost);
+        const oth = Number(otherCost);
+        if (!(pkg >= 0)) throw new Error('تكلفة التغليف لازم تكون رقم صفر أو أكثر.');
+        if (!(del >= 0)) throw new Error('تكلفة التوصيل لازم تكون رقم صفر أو أكثر.');
+        if (!(oth >= 0)) throw new Error('التكاليف الأخرى لازم تكون رقم صفر أو أكثر.');
+
+        const { data, error } = await window.supabaseClient
+            .from('recipes')
+            .update({
+                name: name.trim(),
+                servings: Number(servings),
+                prep_time_minutes: Number(prepTime),
+                cook_time_minutes: Number(cookTime),
+                energy_source: energySource,
+                hourly_rate: Number(hourlyRate),
+                electricity_rate: Number(electricityRate),
+                gas_cylinder_price: Number(gasCylinderPrice),
+                packaging_cost: pkg,
+                delivery_cost: del,
+                other_cost: oth
+            })
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) {
+            console.error('updateRecipe error:', error);
+            throw new Error('تعذر تعديل الوصفة. حاول مرة أخرى.');
+        }
+        return dbToRecipe(data, []);
+    }
+
+    // تحذف وصفة. CASCADE في القاعدة يحذف recipe_ingredients التابعة.
+    async function deleteRecipe(id) {
+        if (!id) throw new Error('رقم الوصفة مطلوب');
+
+        const { error } = await window.supabaseClient
+            .from('recipes')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            console.error('deleteRecipe error:', error);
+            throw new Error('تعذر حذف الوصفة. حاول مرة أخرى.');
+        }
+    }
+
+    // تضيف مكوناً إلى وصفة. لو المكون مكرر نكشف خطأ unique constraint
+    // ونرمي رسالة عربية مفهومة.
+    async function addIngredientToRecipe(recipeId, ingredientId, userAmount, userUnit) {
+        if (!recipeId) throw new Error('رقم الوصفة مطلوب');
+        if (!ingredientId) throw new Error('رقم المكون مطلوب');
+
+        const quantity = convertToBaseUnit(userAmount, userUnit);
+
+        const { data, error } = await window.supabaseClient
+            .from('recipe_ingredients')
+            .insert({
+                recipe_id: recipeId,
+                ingredient_id: ingredientId,
+                quantity: quantity,
+                display_unit: userUnit
+            })
+            .select()
+            .single();
+
+        if (error) {
+            // رمز 23505 = مخالفة unique constraint في Postgres
+            if (error.code === '23505' || (error.message && error.message.toLowerCase().includes('duplicate'))) {
+                throw new Error('هذا المكون مضاف بالفعل إلى الوصفة');
+            }
+            console.error('addIngredientToRecipe error:', error);
+            throw new Error('تعذر إضافة المكون إلى الوصفة.');
+        }
+        return dbToEntry(data);
+    }
+
+    // تحذف مكوناً من وصفة
+    async function removeIngredientFromRecipe(recipeId, ingredientId) {
+        if (!recipeId) throw new Error('رقم الوصفة مطلوب');
+        if (!ingredientId) throw new Error('رقم المكون مطلوب');
+
+        const { error } = await window.supabaseClient
+            .from('recipe_ingredients')
+            .delete()
+            .eq('recipe_id', recipeId)
+            .eq('ingredient_id', ingredientId);
+
+        if (error) {
+            console.error('removeIngredientFromRecipe error:', error);
+            throw new Error('تعذر إزالة المكون.');
+        }
+    }
+
+    // تحدّث كمية مكون داخل وصفة
+    async function updateIngredientInRecipe(recipeId, ingredientId, userAmount, userUnit) {
+        if (!recipeId) throw new Error('رقم الوصفة مطلوب');
+        if (!ingredientId) throw new Error('رقم المكون مطلوب');
+
+        const quantity = convertToBaseUnit(userAmount, userUnit);
+
+        const { error } = await window.supabaseClient
+            .from('recipe_ingredients')
+            .update({ quantity: quantity, display_unit: userUnit })
+            .eq('recipe_id', recipeId)
+            .eq('ingredient_id', ingredientId);
+
+        if (error) {
+            console.error('updateIngredientInRecipe error:', error);
+            throw new Error('تعذر تعديل كمية المكون.');
+        }
+    }
+
     window.tasceerRecipes = {
         getAllRecipes: getAllRecipes,
         getRecipeById: getRecipeById,
         addRecipe: addRecipe,
         updateRecipe: updateRecipe,
         deleteRecipe: deleteRecipe,
-        saveRecipes: saveRecipes,
         addIngredientToRecipe: addIngredientToRecipe,
         removeIngredientFromRecipe: removeIngredientFromRecipe,
         updateIngredientInRecipe: updateIngredientInRecipe
