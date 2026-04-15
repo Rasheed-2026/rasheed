@@ -13,6 +13,11 @@
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+    <!-- ترويسة التطبيق: اسم البرنامج يظهر ثابت أعلى كل صفحة -->
+    <header class="app-header">
+        <h1 class="app-header__title">حاسبة التسعير للأسر المنتجة</h1>
+    </header>
+
     <!-- شريط التنقل بين الصفحات -->
     <nav class="nav" aria-label="القائمة الرئيسية">
         <a href="index.html" class="nav-link">المكونات</a>
@@ -192,6 +197,14 @@
                 <p class="empty-state">لم تضف أي وصفات بعد.</p>
             </div>
         </section>
+
+        <!-- سهم الانتقال للصفحة التالية -->
+        <div class="next-page-arrow">
+            <a href="pricing-page.html" class="next-page-arrow__link">
+                التالي: التسعير
+                <span class="next-page-arrow__icon" aria-hidden="true">←</span>
+            </a>
+        </div>
     </main>
 
     <!-- ingredients.js للقراءة، recipes.js طبقة البيانات،

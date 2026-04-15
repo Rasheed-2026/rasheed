@@ -32,39 +32,34 @@ function renderIngredients() {
 
     if (ingredients.length === 0) {
         const empty = document.createElement('p');
-        empty.className = 'empty-state';
+        empty.className = 'empty-state empty-state--full';
         empty.textContent = 'لم تضف أي مكونات بعد.';
         listContainer.appendChild(empty);
         return;
     }
 
     ingredients.forEach(function (item) {
+        // بطاقة المكون كعنصر في شبكة (grid)
         const card = document.createElement('div');
-        card.className = 'item-card';
+        card.className = 'ingredient-card';
 
-        const info = document.createElement('div');
-        info.className = 'item-info';
-
-        const name = document.createElement('div');
-        name.className = 'item-name';
+        const name = document.createElement('h3');
+        name.className = 'ingredient-card__name';
         name.textContent = item.name;
 
-        const meta = document.createElement('div');
-        meta.className = 'item-meta';
+        const info = document.createElement('p');
+        info.className = 'ingredient-card__info';
         const sizeText = ingredientsApi.formatPackageSize(item.packageWeightInGrams, item.unitType);
         const priceText = formatPrice(item.packagePrice);
-        meta.textContent = 'العبوة: ' + sizeText + ' — ' + priceText;
-
-        info.appendChild(name);
-        info.appendChild(meta);
+        info.textContent = 'العبوة: ' + sizeText + ' — ' + priceText;
 
         // مجموعة أزرار البطاقة (تعديل + حذف)
         const actions = document.createElement('div');
-        actions.className = 'card-actions';
+        actions.className = 'ingredient-card__actions';
 
         const editBtn = document.createElement('button');
         editBtn.type = 'button';
-        editBtn.className = 'btn btn-secondary';
+        editBtn.className = 'btn btn-secondary btn--small';
         editBtn.textContent = 'تعديل';
         editBtn.dataset.id = item.id;
         editBtn.dataset.action = 'edit';
@@ -72,7 +67,7 @@ function renderIngredients() {
 
         const deleteBtn = document.createElement('button');
         deleteBtn.type = 'button';
-        deleteBtn.className = 'btn btn-danger';
+        deleteBtn.className = 'btn btn-danger btn--small';
         deleteBtn.textContent = 'حذف';
         deleteBtn.dataset.id = item.id;
         deleteBtn.dataset.action = 'delete';
@@ -81,6 +76,7 @@ function renderIngredients() {
         actions.appendChild(editBtn);
         actions.appendChild(deleteBtn);
 
+        card.appendChild(name);
         card.appendChild(info);
         card.appendChild(actions);
 

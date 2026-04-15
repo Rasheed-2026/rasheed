@@ -13,6 +13,11 @@
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+    <!-- ترويسة التطبيق: اسم البرنامج يظهر ثابت أعلى كل صفحة -->
+    <header class="app-header">
+        <h1 class="app-header__title">حاسبة التسعير للأسر المنتجة</h1>
+    </header>
+
     <!-- شريط التنقل بين الصفحات -->
     <nav class="nav" aria-label="القائمة الرئيسية">
         <a href="index.html" class="nav-link nav-link--active">المكونات</a>
@@ -22,7 +27,7 @@
     </nav>
 
     <main class="container">
-        <h1>حاسبة التسعير للأسر المنتجة</h1>
+        <h1>المكونات</h1>
         <p class="intro">أضف المكونات التي تستخدمها في منتجاتك. سنستخدمها لاحقاً في حساب تكلفة الوصفات.</p>
 
         <!-- نموذج إضافة مكون جديد -->
@@ -88,10 +93,18 @@
         <!-- قائمة المكونات المضافة -->
         <section class="list-section" aria-labelledby="list-title">
             <h2 id="list-title">المكونات المضافة</h2>
-            <div id="ingredients-list">
+            <div id="ingredients-list" class="ingredients-grid">
                 <p class="empty-state">لم تضف أي مكونات بعد.</p>
             </div>
         </section>
+
+        <!-- سهم الانتقال للصفحة التالية -->
+        <div class="next-page-arrow">
+            <a href="recipes.html" class="next-page-arrow__link">
+                التالي: الوصفات
+                <span class="next-page-arrow__icon" aria-hidden="true">←</span>
+            </a>
+        </div>
     </main>
 
     <!-- ترتيب مهم: ingredients.js يجي أول عشان main.js يقدر يستخدم دواله -->
