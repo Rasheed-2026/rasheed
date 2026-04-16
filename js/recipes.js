@@ -47,6 +47,7 @@
             deliveryCost: Number(row.delivery_cost),
             otherCost: Number(row.other_cost),
             imageUrl: row.image_url || null,
+            sellingPrice: row.selling_price != null ? Number(row.selling_price) : null,
             createdAt: row.created_at,
             ingredients: (ingredientEntries || []).map(dbToEntry)
         };
@@ -147,7 +148,7 @@
 
     // تضيف وصفة جديدة (بدون مكونات — تضاف لاحقاً عبر addIngredientToRecipe)
     // imageUrl اختياري — رابط صورة الوصفة في Supabase Storage
-    async function addRecipe(name, servings, prepTime, cookTime, energySource, hourlyRate, electricityRate, gasCylinderPrice, packagingCost, deliveryCost, otherCost, imageUrl) {
+    async function addRecipe(name, servings, prepTime, cookTime, energySource, hourlyRate, electricityRate, gasCylinderPrice, packagingCost, deliveryCost, otherCost, imageUrl, sellingPrice) {
         const userId = await getCurrentUserId();
         if (!userId) {
             throw new Error('يجب تسجيل الدخول أولاً');
@@ -179,6 +180,10 @@
         if (imageUrl !== undefined && imageUrl !== null) {
             insertData.image_url = imageUrl;
         }
+        // سعر البيع — اختياري
+        if (sellingPrice != null && Number(sellingPrice) > 0) {
+            insertData.selling_price = Number(sellingPrice);
+        }
 
         const { data, error } = await window.supabaseClient
             .from('recipes')
@@ -195,7 +200,7 @@
 
     // تعدّل حقول وصفة موجودة. لا نلمس recipe_ingredients هنا.
     // imageUrl: لو undefined = ما نلمس الصورة الحالية، لو null = نحذفها، لو string = نحدّثها
-    async function updateRecipe(id, name, servings, prepTime, cookTime, energySource, hourlyRate, electricityRate, gasCylinderPrice, packagingCost, deliveryCost, otherCost, imageUrl) {
+    async function updateRecipe(id, name, servings, prepTime, cookTime, energySource, hourlyRate, electricityRate, gasCylinderPrice, packagingCost, deliveryCost, otherCost, imageUrl, sellingPrice) {
         if (!id) throw new Error('رقم الوصفة مطلوب');
 
         const pkg = Number(packagingCost);
@@ -222,6 +227,11 @@
         // undefined = ما نلمسها، null = نحذفها، string = صورة جديدة
         if (imageUrl !== undefined) {
             updateData.image_url = imageUrl;
+        }
+        // سعر البيع — null يمسحه، رقم يحدّثه
+        if (sellingPrice !== undefined) {
+            updateData.selling_price = (sellingPrice != null && Number(sellingPrice) > 0)
+                ? Number(sellingPrice) : null;
         }
 
         const { data, error } = await window.supabaseClient
@@ -395,6 +405,26 @@
         }
     }
 
+    // ===== تحديث سعر البيع فقط =====
+    // يُستخدم من صفحة التسعير لحفظ السعر المحسوب كسعر بيع للوصفة
+    async function updateSellingPrice(recipeId, price) {
+        if (!recipeId) throw new Error('رقم الوصفة مطلوب');
+        var sellingPrice = (price != null && Number(price) > 0) ? Number(price) : null;
+
+        const { data, error } = await window.supabaseClient
+            .from('recipes')
+            .update({ selling_price: sellingPrice })
+            .eq('id', recipeId)
+            .select()
+            .single();
+
+        if (error) {
+            console.error('updateSellingPrice error:', error);
+            throw new Error('تعذر حفظ سعر البيع. حاول مرة أخرى.');
+        }
+        return dbToRecipe(data, []);
+    }
+
     window.tasceerRecipes = {
         getAllRecipes: getAllRecipes,
         getRecipeById: getRecipeById,
@@ -405,6 +435,7 @@
         removeIngredientFromRecipe: removeIngredientFromRecipe,
         updateIngredientInRecipe: updateIngredientInRecipe,
         uploadRecipeImage: uploadRecipeImage,
-        deleteRecipeImage: deleteRecipeImage
+        deleteRecipeImage: deleteRecipeImage,
+        updateSellingPrice: updateSellingPrice
     };
 })();

@@ -162,6 +162,15 @@ async function renderRecipes() {
             ' — الغاز ' + gp + ' ريال';
 
         info.appendChild(name);
+
+        // سعر البيع — يظهر فقط لو محدد
+        if (recipe.sellingPrice) {
+            const sellingLine = document.createElement('div');
+            sellingLine.className = 'item-meta item-meta--selling-price';
+            sellingLine.textContent = 'سعر البيع: ' + recipe.sellingPrice.toFixed(2) + ' ريال';
+            info.appendChild(sellingLine);
+        }
+
         info.appendChild(meta);
         info.appendChild(energy);
         info.appendChild(pricingLine);
@@ -433,6 +442,10 @@ async function enterEditMode(id) {
         recipe.gasCylinderPrice ?? d.DEFAULT_GAS_CYLINDER_PRICE
     );
 
+    // سعر البيع: نعبّيه لو موجود
+    document.getElementById('recipe-selling-price').value =
+        recipe.sellingPrice ? recipe.sellingPrice : '';
+
     // التكاليف الإضافية: للوصفات القديمة نعرض 0
     fillExtraCostInputs(
         recipe.packagingCost ?? 0,
@@ -580,6 +593,9 @@ document.addEventListener('DOMContentLoaded', function () {
         const deliveryCost = parseFloat(document.getElementById('recipe-delivery-cost').value);
         const otherCost = parseFloat(document.getElementById('recipe-other-cost').value);
 
+        // سعر البيع — اختياري
+        const sellingPrice = parseFloat(document.getElementById('recipe-selling-price').value) || null;
+
         // تحقق بسيط من صحة المدخلات
         if (name === '') {
             alert('من فضلك اكتب اسم الوصفة.');
@@ -656,7 +672,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 await recipesApi.addRecipe(name, servings, prepTime, cookTime, energySource,
                     hourlyRate, electricityRate, gasCylinderPrice,
                     packagingCost, deliveryCost, otherCost,
-                    imageUrlForSave !== undefined ? imageUrlForSave : null);
+                    imageUrlForSave !== undefined ? imageUrlForSave : null,
+                    sellingPrice);
                 form.reset();
                 fillPricingInputsWithDefaults();
                 fillExtraCostInputsWithDefaults();
@@ -666,7 +683,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 await recipesApi.updateRecipe(editingRecipeId, name, servings, prepTime, cookTime, energySource,
                     hourlyRate, electricityRate, gasCylinderPrice,
                     packagingCost, deliveryCost, otherCost,
-                    imageUrlForSave);
+                    imageUrlForSave,
+                    sellingPrice);
                 exitEditMode();
             }
             await renderRecipes();

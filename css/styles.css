@@ -2197,6 +2197,49 @@ button,
 }
 
 /* ============================================================
+   نصائح الحقول + سعر البيع
+   ============================================================ */
+
+/* نص توضيحي صغير أسفل الحقل */
+.form-hint {
+    display: block;
+    font-size: 0.8em;
+    color: var(--color-soft);
+    margin-block-start: 4px;
+}
+
+/* سعر البيع في بطاقة الوصفة */
+.item-meta--selling-price {
+    color: var(--color-primary);
+    font-weight: 700;
+}
+
+/* حاوية زر حفظ سعر البيع في صفحة التسعير */
+.save-selling-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* ملاحظة السعر الحالي */
+.save-selling-note {
+    font-size: 0.8em;
+    color: var(--color-soft);
+}
+
+/* رسالة نجاح حفظ السعر */
+.save-selling-feedback {
+    font-size: 0.85em;
+    color: var(--color-primary);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+.save-selling-feedback--visible {
+    opacity: 1;
+}
+
+/* ============================================================
    صفحة الطلبات وإدارة العملاء
    ============================================================ */
 

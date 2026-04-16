@@ -452,6 +452,32 @@ function renderCalculationResult(calculation) {
     addRow.appendChild(checkboxLabel);
     addRow.appendChild(feedback);
 
+    // زر حفظ كسعر بيع + ملاحظة السعر الحالي
+    const saveSellingWrap = document.createElement('span');
+    saveSellingWrap.className = 'save-selling-wrap';
+
+    // لو الوصفة عندها سعر بيع حالي مختلف، ننبّه المستخدم
+    if (calculation.recipe.sellingPrice && calculation.recipe.sellingPrice !== calculation.sellingPrice) {
+        const currentNote = document.createElement('span');
+        currentNote.className = 'save-selling-note';
+        currentNote.textContent = 'سعر البيع الحالي: ' + calculation.recipe.sellingPrice.toFixed(2) + ' ريال';
+        saveSellingWrap.appendChild(currentNote);
+    }
+
+    const saveSellingBtn = document.createElement('button');
+    saveSellingBtn.type = 'button';
+    saveSellingBtn.id = 'save-selling-price-btn';
+    saveSellingBtn.className = 'btn btn-secondary';
+    saveSellingBtn.textContent = 'احفظ كسعر بيع';
+    saveSellingWrap.appendChild(saveSellingBtn);
+
+    const saveSellingFeedback = document.createElement('span');
+    saveSellingFeedback.id = 'save-selling-feedback';
+    saveSellingFeedback.className = 'save-selling-feedback';
+    saveSellingWrap.appendChild(saveSellingFeedback);
+
+    addRow.appendChild(saveSellingWrap);
+
     // زر تصدير صورة للعميل — على الطرف الآخر من نفس الصف
     const exportBtn = document.createElement('button');
     exportBtn.type = 'button';
@@ -827,10 +853,39 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     // زر إظهار/إخفاء التفاصيل — نتعامل معه بـ delegation
     // لأنه يُعاد بناؤه في كل حساب جديد.
-    resultSection.addEventListener('click', function (event) {
+    resultSection.addEventListener('click', async function (event) {
         const target = event.target;
         if (target && target.id === 'export-customer-image-btn') {
             handleExportCustomerImage();
+            return;
+        }
+        // زر حفظ كسعر بيع
+        if (target && target.id === 'save-selling-price-btn') {
+            if (!lastCalculated) return;
+            target.disabled = true;
+            target.textContent = 'جاري الحفظ...';
+            var feedbackEl = document.getElementById('save-selling-feedback');
+            try {
+                await recipesApi.updateSellingPrice(lastCalculated.recipeId, lastCalculated.sellingPrice);
+                // نحدّث الكائن المحلي عشان الملاحظة تختفي
+                lastCalculated.recipe.sellingPrice = lastCalculated.sellingPrice;
+                if (feedbackEl) {
+                    feedbackEl.textContent = 'تم حفظ ' + lastCalculated.sellingPrice.toFixed(2) + ' ريال ✅';
+                    feedbackEl.classList.add('save-selling-feedback--visible');
+                    setTimeout(function () {
+                        feedbackEl.classList.remove('save-selling-feedback--visible');
+                        feedbackEl.textContent = '';
+                    }, 3000);
+                }
+                // نخفي ملاحظة السعر الحالي لأنه صار نفس السعر
+                var note = resultSection.querySelector('.save-selling-note');
+                if (note) note.remove();
+            } catch (err) {
+                alert(err.message || 'حصل خطأ أثناء حفظ سعر البيع');
+            } finally {
+                target.disabled = false;
+                target.textContent = 'احفظ كسعر بيع';
+            }
             return;
         }
         if (target && target.id === 'toggle-breakdown-btn') {
