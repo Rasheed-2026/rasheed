@@ -31,7 +31,7 @@ const openIngredientsByRecipe = {};
 
 // تنسيق رقم: نشيل الأصفار الزائدة بعد الفاصلة (حد أقصى منزلتين)
 function formatNumber(num) {
-    return Number(num.toFixed(2)).toString();
+    return toWesternNumerals(Number(num.toFixed(2)).toString());
 }
 
 // تختار الوحدة الأنسب لعرض كمية مكون داخل وصفة.
@@ -135,9 +135,9 @@ async function renderRecipes() {
         const meta = document.createElement('div');
         meta.className = 'item-meta';
         meta.textContent =
-            'عدد الحصص: ' + recipe.servings +
-            ' — وقت التحضير: ' + recipe.prepTimeMinutes + ' دقيقة' +
-            ' — وقت الطبخ: ' + recipe.cookTimeMinutes + ' دقيقة';
+            'عدد الحصص: ' + toWesternNumerals(recipe.servings) +
+            ' — وقت التحضير: ' + toWesternNumerals(recipe.prepTimeMinutes) + ' دقيقة' +
+            ' — وقت الطبخ: ' + toWesternNumerals(recipe.cookTimeMinutes) + ' دقيقة';
 
         // سطر مصدر الطاقة
         const energy = document.createElement('div');
@@ -157,9 +157,9 @@ async function renderRecipes() {
         const pricingLine = document.createElement('div');
         pricingLine.className = 'item-meta item-meta--pricing';
         pricingLine.textContent =
-            'قيم التسعير: ساعة العمل ' + hr + ' ريال' +
-            ' — الكهرباء ' + er + ' هللة' +
-            ' — الغاز ' + gp + ' ريال';
+            'قيم التسعير: ساعة العمل ' + toWesternNumerals(hr) + ' ريال' +
+            ' — الكهرباء ' + toWesternNumerals(er) + ' هللة' +
+            ' — الغاز ' + toWesternNumerals(gp) + ' ريال';
 
         info.appendChild(name);
 
@@ -167,7 +167,7 @@ async function renderRecipes() {
         if (recipe.sellingPrice) {
             const sellingLine = document.createElement('div');
             sellingLine.className = 'item-meta item-meta--selling-price';
-            sellingLine.textContent = 'سعر البيع: ' + recipe.sellingPrice.toFixed(2) + ' ريال';
+            sellingLine.textContent = 'سعر البيع: ' + toWesternNumerals(recipe.sellingPrice.toFixed(2)) + ' ريال';
             info.appendChild(sellingLine);
         }
 
@@ -404,13 +404,13 @@ function formatExtraCostsLine(recipe) {
     const oth = Number(recipe.otherCost ?? 0);
     const parts = [];
     if (pkg > 0) {
-        parts.push('تغليف ' + pkg + ' ريال');
+        parts.push('تغليف ' + toWesternNumerals(pkg) + ' ريال');
     }
     if (del > 0) {
-        parts.push('توصيل ' + del + ' ريال');
+        parts.push('توصيل ' + toWesternNumerals(del) + ' ريال');
     }
     if (oth > 0) {
-        parts.push('أخرى ' + oth + ' ريال');
+        parts.push('أخرى ' + toWesternNumerals(oth) + ' ريال');
     }
     if (parts.length === 0) {
         return null;
@@ -578,23 +578,23 @@ document.addEventListener('DOMContentLoaded', function () {
         event.preventDefault();
 
         const name = document.getElementById('recipe-name').value.trim();
-        const servings = Number(document.getElementById('recipe-servings').value);
-        const prepTime = Number(document.getElementById('recipe-prep-time').value);
-        const cookTime = Number(document.getElementById('recipe-cook-time').value);
+        const servings = Number(normalizeNumericInput(document.getElementById('recipe-servings').value));
+        const prepTime = Number(normalizeNumericInput(document.getElementById('recipe-prep-time').value));
+        const cookTime = Number(normalizeNumericInput(document.getElementById('recipe-cook-time').value));
         const energySource = document.getElementById('recipe-energy').value;
 
         // قيم التسعير الجديدة — نستخدم parseFloat للسماح بكسور عشرية
-        const hourlyRate = parseFloat(document.getElementById('recipe-hourly-rate').value);
-        const electricityRate = parseFloat(document.getElementById('recipe-electricity-rate').value);
-        const gasCylinderPrice = parseFloat(document.getElementById('recipe-gas-price').value);
+        const hourlyRate = parseFloat(normalizeNumericInput(document.getElementById('recipe-hourly-rate').value));
+        const electricityRate = parseFloat(normalizeNumericInput(document.getElementById('recipe-electricity-rate').value));
+        const gasCylinderPrice = parseFloat(normalizeNumericInput(document.getElementById('recipe-gas-price').value));
 
         // التكاليف الإضافية: الصفر مسموح
-        const packagingCost = parseFloat(document.getElementById('recipe-packaging-cost').value);
-        const deliveryCost = parseFloat(document.getElementById('recipe-delivery-cost').value);
-        const otherCost = parseFloat(document.getElementById('recipe-other-cost').value);
+        const packagingCost = parseFloat(normalizeNumericInput(document.getElementById('recipe-packaging-cost').value));
+        const deliveryCost = parseFloat(normalizeNumericInput(document.getElementById('recipe-delivery-cost').value));
+        const otherCost = parseFloat(normalizeNumericInput(document.getElementById('recipe-other-cost').value));
 
         // سعر البيع — اختياري
-        const sellingPrice = parseFloat(document.getElementById('recipe-selling-price').value) || null;
+        const sellingPrice = parseFloat(normalizeNumericInput(document.getElementById('recipe-selling-price').value)) || null;
 
         // تحقق بسيط من صحة المدخلات
         if (name === '') {
@@ -760,7 +760,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const unitSelect = card.querySelector('select[data-field="unit"]');
 
             const ingredientId = selectIng ? selectIng.value : '';
-            const amount = amountInput ? Number(amountInput.value) : 0;
+            const amount = amountInput ? Number(normalizeNumericInput(amountInput.value)) : 0;
             const unit = unitSelect ? unitSelect.value : 'g';
 
             if (!ingredientId) {

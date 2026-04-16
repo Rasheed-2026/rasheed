@@ -282,8 +282,8 @@
     // ===== إضافة وصفة للطلب =====
     function handleAddOrderItem() {
         var recipeId = recipeSelect.value;
-        var quantity = Number(quantityInput.value);
-        var unitPrice = Number(priceInput.value);
+        var quantity = Number(normalizeNumericInput(quantityInput.value));
+        var unitPrice = Number(normalizeNumericInput(priceInput.value));
 
         if (!recipeId) {
             alert('اختر وصفة');
@@ -342,16 +342,16 @@
             row.className = 'order-item-row';
             row.innerHTML =
                 '<span class="order-item-row__info">' +
-                    item.recipeName + ' × ' + item.quantity +
-                    ' — <strong>' + item.subtotal.toFixed(2) + ' ريال</strong>' +
-                    ' <span class="order-item-row__unit-price">(' + item.unitPrice.toFixed(2) + ' للوحدة)</span>' +
+                    item.recipeName + ' × ' + toWesternNumerals(item.quantity) +
+                    ' — <strong>' + toWesternNumerals(item.subtotal.toFixed(2)) + ' ريال</strong>' +
+                    ' <span class="order-item-row__unit-price">(' + toWesternNumerals(item.unitPrice.toFixed(2)) + ' للوحدة)</span>' +
                 '</span>' +
                 '<button class="btn btn--danger btn--small" data-action="remove-item" data-index="' + index + '">حذف</button>';
             orderItemsList.appendChild(row);
         });
 
         total = Math.round(total * 100) / 100;
-        orderTotalAmount.textContent = total.toFixed(2);
+        orderTotalAmount.textContent = toWesternNumerals(total.toFixed(2));
         orderTotalEl.hidden = false;
     }
 
@@ -451,8 +451,8 @@
 
             // بناء HTML العناصر
             var itemsHtml = order.items.map(function (item) {
-                return item.recipeName + ' × ' + item.quantity +
-                    ' — ' + item.subtotal.toFixed(2) + ' ريال';
+                return item.recipeName + ' × ' + toWesternNumerals(item.quantity) +
+                    ' — ' + toWesternNumerals(item.subtotal.toFixed(2)) + ' ريال';
             }).join('<br>');
 
             // أيقونة طريقة التسليم
@@ -481,7 +481,7 @@
                     '<div class="order-card__date">' + formatDateArabic(order.deliveryDate) + '</div>' +
                 '</div>' +
                 '<div class="order-card__items">' + itemsHtml + '</div>' +
-                '<div class="order-card__total">الإجمالي: ' + order.totalPrice.toFixed(2) + ' ريال</div>' +
+                '<div class="order-card__total">الإجمالي: ' + toWesternNumerals(order.totalPrice.toFixed(2)) + ' ريال</div>' +
                 notesHtml +
                 '<div class="order-card__status">' +
                     '<span class="status-badge status-badge--' + order.status + '">' +

@@ -19,6 +19,29 @@
     padding: 0;
 }
 
+/* فرض الأرقام الغربية (0-9) بدل الهندية (٠-٩) على كل المتصفحات */
+* {
+    font-variant-numeric: tabular-nums;
+}
+
+body {
+    font-feature-settings: "tnum";
+}
+
+/* عناصر تعرض أرقام — نفرض عليها الاتجاه النصي المحايد */
+input[type="number"],
+input[type="tel"],
+input[type="date"],
+select {
+    unicode-bidi: plaintext;
+}
+
+/* كلاس مساعد يُضاف لأي عنصر يحتاج أرقام غربية */
+.western-numerals {
+    unicode-bidi: plaintext;
+    direction: ltr;
+}
+
 /* الألوان الأساسية للمشروع */
 :root {
     --color-bg: #faf7f2;

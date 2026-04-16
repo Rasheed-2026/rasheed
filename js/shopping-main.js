@@ -138,7 +138,7 @@
             alert('اختر وصفة أولاً');
             return;
         }
-        const qty = Number(quantityInput.value);
+        const qty = Number(normalizeNumericInput(quantityInput.value));
         if (!(qty >= 1)) {
             alert('الكمية لازم تكون رقم ١ أو أكثر');
             return;
@@ -196,14 +196,14 @@
         );
         const lines = ['قائمة التسوق:'];
         result.items.forEach(function (item) {
-            const qtyText = item.totalQuantity + ' ' + item.baseUnitLabel;
+            const qtyText = toWesternNumerals(item.totalQuantity) + ' ' + item.baseUnitLabel;
             if (item.isDeleted) {
                 lines.push('- (مكون محذوف): ' + qtyText);
             } else {
-                lines.push('- ' + item.name + ': ' + qtyText + ' — ' + item.cost.toFixed(2) + ' ريال');
+                lines.push('- ' + item.name + ': ' + qtyText + ' — ' + toWesternNumerals(item.cost.toFixed(2)) + ' ريال');
             }
         });
-        lines.push('الإجمالي: ' + result.totalCost.toFixed(2) + ' ريال');
+        lines.push('الإجمالي: ' + toWesternNumerals(result.totalCost.toFixed(2)) + ' ريال');
         const text = lines.join('\n');
 
         if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -291,7 +291,7 @@
             const info = document.createElement('div');
             info.className = 'shopping-selected-row__info';
             const name = recipe ? recipe.name : '(وصفة محذوفة)';
-            info.textContent = name + ' × ' + sel.quantity;
+            info.textContent = name + ' × ' + toWesternNumerals(sel.quantity);
 
             const removeBtn = document.createElement('button');
             removeBtn.type = 'button';
@@ -355,11 +355,11 @@
 
                 const qtyEl = document.createElement('span');
                 qtyEl.className = 'shopping-item-row__qty';
-                qtyEl.textContent = item.totalQuantity + ' ' + item.baseUnitLabel;
+                qtyEl.textContent = toWesternNumerals(item.totalQuantity) + ' ' + item.baseUnitLabel;
 
                 const costEl = document.createElement('span');
                 costEl.className = 'shopping-item-row__cost';
-                costEl.textContent = item.isDeleted ? '—' : (item.cost.toFixed(2) + ' ريال');
+                costEl.textContent = item.isDeleted ? '—' : (toWesternNumerals(item.cost.toFixed(2)) + ' ريال');
 
                 metaEl.appendChild(qtyEl);
                 metaEl.appendChild(costEl);
@@ -371,7 +371,7 @@
         }
 
         // الإجمالي
-        totalBox.textContent = 'إجمالي تكلفة التسوق: ' + result.totalCost.toFixed(2) + ' ريال';
+        totalBox.textContent = 'إجمالي تكلفة التسوق: ' + toWesternNumerals(result.totalCost.toFixed(2)) + ' ريال';
     }
 
     // يعرض بطاقات القوائم المحفوظة. يخفي القسم لو فاضي.

@@ -63,7 +63,7 @@
     // تنسيق مبلغ مالي كنص عربي: "12.34 ريال".
     function formatSAR(amount) {
         const value = Number(amount) || 0;
-        return value.toFixed(2) + ' ريال';
+        return toWesternNumerals(value.toFixed(2)) + ' ريال';
     }
 
     // === تكلفة المواد الخام ===

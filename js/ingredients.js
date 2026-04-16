@@ -163,7 +163,7 @@
     // === دوال تنسيق العرض (تبقى متزامنة — لا تلمس البيانات) ===
 
     function formatNumber(num) {
-        return Number(num.toFixed(2)).toString();
+        return toWesternNumerals(Number(num.toFixed(2)).toString());
     }
 
     // ترجع الكمية والوحدة المناسبة لعرض المكون
@@ -192,7 +192,7 @@
     // تختار الوحدة الأنسب لعرض حجم العبوة بشكل مفهوم للمستخدم
     function formatPackageSize(amount, unitType) {
         if (unitType === 'piece') {
-            return amount + ' حبة';
+            return toWesternNumerals(amount) + ' حبة';
         }
         if (unitType === 'weight') {
             if (amount >= 1000) {
@@ -206,7 +206,7 @@
             }
             return formatNumber(amount) + ' مليلتر';
         }
-        return String(amount);
+        return toWesternNumerals(String(amount));
     }
 
     // نعرض كل الدوال على كائن عام في window

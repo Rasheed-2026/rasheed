@@ -34,7 +34,7 @@ let breakdownVisible = false;
 
 // تنسيق رقم بسيط مثل ما في recipes-main.js
 function formatNumber(num) {
-    return Number(num.toFixed(2)).toString();
+    return toWesternNumerals(Number(num.toFixed(2)).toString());
 }
 
 // نفس دالة formatQuantityForDisplay في recipes-main.js.
@@ -82,23 +82,23 @@ function buildEnergyExplainer(recipe) {
 
     const electricityHalalas = recipe.electricityRate ?? pricing.DEFAULT_ELECTRICITY_RATE;
     const gasPrice = recipe.gasCylinderPrice ?? pricing.DEFAULT_GAS_CYLINDER_PRICE;
-    const rateSAR = (Number(electricityHalalas) / 100).toFixed(2);
+    const rateSAR = toWesternNumerals((Number(electricityHalalas) / 100).toFixed(2));
 
     if (source === 'none' || cook === 0) {
         return 'لم يتم اختيار مصدر طاقة لهذه الوصفة (أو وقت الطبخ صفر).';
     }
     if (source === 'electric') {
-        return 'الفرن الكهربائي (' + kw + ' كيلوواط) × ' + cook + ' دقيقة × ' +
+        return 'الفرن الكهربائي (' + toWesternNumerals(kw) + ' كيلوواط) × ' + toWesternNumerals(cook) + ' دقيقة × ' +
             'تعرفة الكهرباء (' + rateSAR + ' ريال لكل كيلوواط ساعة)';
     }
     if (source === 'gas') {
-        return 'الغاز لمدة ' + cook + ' دقيقة، بناءً على سعر أسطوانة ' +
+        return 'الغاز لمدة ' + toWesternNumerals(cook) + ' دقيقة، بناءً على سعر أسطوانة ' +
             pricing.formatSAR(gasPrice) +
-            ' تدوم حوالي ' + pricing.GAS_CYLINDER_BURN_HOURS + ' ساعة';
+            ' تدوم حوالي ' + toWesternNumerals(pricing.GAS_CYLINDER_BURN_HOURS) + ' ساعة';
     }
     if (source === 'both') {
-        return 'نصف الوقت كهرباء (' + (cook / 2) + ' دقيقة) ونصفه غاز (' +
-            (cook / 2) + ' دقيقة)';
+        return 'نصف الوقت كهرباء (' + toWesternNumerals(cook / 2) + ' دقيقة) ونصفه غاز (' +
+            toWesternNumerals(cook / 2) + ' دقيقة)';
     }
     return '';
 }
@@ -157,7 +157,7 @@ function readMarginValue() {
 
     if (choice === 'custom') {
         const input = document.getElementById('custom-margin');
-        const n = Number(input.value);
+        const n = Number(normalizeNumericInput(input.value));
         if (!(n > 0)) {
             return null;
         }
@@ -247,7 +247,7 @@ function renderCalculationResult(calculation) {
 
     const indPct = document.createElement('div');
     indPct.className = 'food-cost-indicator__percentage';
-    indPct.textContent = foodCostPct.toFixed(1) + '%';
+    indPct.textContent = toWesternNumerals(foodCostPct.toFixed(1)) + '%';
     indicator.appendChild(indPct);
 
     const indCatLabel = document.createElement('div');
@@ -318,7 +318,7 @@ function renderCalculationResult(calculation) {
             '• ' + ingredient.name + ': ' +
             formatQuantityForDisplay(ingredient, entry.quantity) +
             ' × (' + pricing.formatSAR(ingredient.packagePrice) +
-            ' ÷ ' + ingredient.packageWeightInGrams + ' ' + baseUnitName(ingredient) + ')' +
+            ' ÷ ' + toWesternNumerals(ingredient.packageWeightInGrams) + ' ' + baseUnitName(ingredient) + ')' +
             ' = ' + pricing.formatSAR(contribution);
         materialsDetails.appendChild(line);
     });
@@ -338,7 +338,7 @@ function renderCalculationResult(calculation) {
     const totalMinutes = Number(recipe.prepTimeMinutes) + Number(recipe.cookTimeMinutes);
     const hourlyRate = recipe.hourlyRate ?? pricing.DEFAULT_HOURLY_RATE;
     timeDetails.textContent =
-        totalMinutes + ' دقيقة × (' + pricing.formatSAR(hourlyRate) + ' ÷ 60 دقيقة)';
+        toWesternNumerals(totalMinutes) + ' دقيقة × (' + pricing.formatSAR(hourlyRate) + ' ÷ 60 دقيقة)';
     sectionA.appendChild(timeDetails);
 
     // === التكاليف الإضافية (تظهر فقط لو فيه قيمة > 0) ===
@@ -402,7 +402,7 @@ function renderCalculationResult(calculation) {
 
     const cardTitle = document.createElement('div');
     cardTitle.className = 'price-card__title';
-    cardTitle.textContent = 'ربح ' + calculation.margin + '%';
+    cardTitle.textContent = 'ربح ' + toWesternNumerals(calculation.margin) + '%';
     card.appendChild(cardTitle);
 
     const totalLine = document.createElement('div');
@@ -460,7 +460,7 @@ function renderCalculationResult(calculation) {
     if (calculation.recipe.sellingPrice && calculation.recipe.sellingPrice !== calculation.sellingPrice) {
         const currentNote = document.createElement('span');
         currentNote.className = 'save-selling-note';
-        currentNote.textContent = 'سعر البيع الحالي: ' + calculation.recipe.sellingPrice.toFixed(2) + ' ريال';
+        currentNote.textContent = 'سعر البيع الحالي: ' + toWesternNumerals(calculation.recipe.sellingPrice.toFixed(2)) + ' ريال';
         saveSellingWrap.appendChild(currentNote);
     }
 
@@ -534,7 +534,7 @@ function renderComparisonSection() {
 
         const margin = document.createElement('div');
         margin.className = 'comparison-card__line';
-        margin.textContent = 'ربح ' + item.margin + '%';
+        margin.textContent = 'ربح ' + toWesternNumerals(item.margin) + '%';
         card.appendChild(margin);
 
         const cost = document.createElement('div');
@@ -699,8 +699,8 @@ function executeCustomerImageExport(message, includeImage, shouldRound) {
     if (shouldRound && lastCalculated.perServing !== null && servings > 0) {
         var roundedPerServing = Math.ceil(lastCalculated.perServing);
         var roundedTotal = roundedPerServing * servings;
-        priceEl.textContent = roundedTotal + ' ريال';
-        perEl.textContent = roundedPerServing + ' ريال';
+        priceEl.textContent = toWesternNumerals(roundedTotal) + ' ريال';
+        perEl.textContent = toWesternNumerals(roundedPerServing) + ' ريال';
     } else {
         // بدون تقريب — نعرض الأرقام الدقيقة
         priceEl.textContent = pricing.formatSAR(lastCalculated.sellingPrice);
@@ -711,7 +711,7 @@ function executeCustomerImageExport(message, includeImage, shouldRound) {
         }
     }
 
-    servingsNoteEl.textContent = servings > 0 ? '(' + servings + ' حصة)' : '';
+    servingsNoteEl.textContent = servings > 0 ? '(' + toWesternNumerals(servings) + ' حصة)' : '';
     msgEl.textContent = message;
 
     // === صورة الوصفة داخل القالب ===
@@ -870,7 +870,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 // نحدّث الكائن المحلي عشان الملاحظة تختفي
                 lastCalculated.recipe.sellingPrice = lastCalculated.sellingPrice;
                 if (feedbackEl) {
-                    feedbackEl.textContent = 'تم حفظ ' + lastCalculated.sellingPrice.toFixed(2) + ' ريال ✅';
+                    feedbackEl.textContent = 'تم حفظ ' + toWesternNumerals(lastCalculated.sellingPrice.toFixed(2)) + ' ريال ✅';
                     feedbackEl.classList.add('save-selling-feedback--visible');
                     setTimeout(function () {
                         feedbackEl.classList.remove('save-selling-feedback--visible');

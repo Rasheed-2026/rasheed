@@ -16,7 +16,7 @@ const ingredientsApi = window.tasceerIngredients;
 let editingIngredientId = null;
 
 function formatPrice(price) {
-    return Number(price.toFixed(2)).toString() + ' ريال';
+    return toWesternNumerals(Number(price.toFixed(2)).toString()) + ' ريال';
 }
 
 // === عرض قائمة المكونات (async لأنها تجيب من Supabase) ===
@@ -132,9 +132,9 @@ document.addEventListener('DOMContentLoaded', function () {
         event.preventDefault();
 
         const name = document.getElementById('ingredient-name').value.trim();
-        const amount = Number(document.getElementById('package-amount').value);
+        const amount = Number(normalizeNumericInput(document.getElementById('package-amount').value));
         const unit = document.getElementById('package-unit').value;
-        const price = Number(document.getElementById('package-price').value);
+        const price = Number(normalizeNumericInput(document.getElementById('package-price').value));
 
         if (name === '') {
             alert('من فضلك اكتب اسم المكون.');
