@@ -115,7 +115,7 @@
         allCustomers.forEach(function (c) {
             var opt = document.createElement('option');
             opt.value = c.id;
-            opt.textContent = c.name + ' — ' + c.phone;
+            opt.textContent = c.name + ' — ' + toWesternNumerals(c.phone);
             customerSelect.appendChild(opt);
         });
     }
@@ -153,17 +153,21 @@
     }
 
     // ===== تنسيق تاريخ للعرض بالعربي =====
+    // نستخدم 'ar-EG-u-nu-latn' عشان نحصل على أسماء الأشهر بالعربي
+    // مع الأرقام الغربية (0-9). ثم نلف النتيجة في toWesternNumerals
+    // كحماية إضافية لأي متصفح قد يتجاهل خيار الأرقام.
     function formatDateArabic(dateStr) {
         if (!dateStr) return '';
         try {
             var date = new Date(dateStr + 'T00:00:00');
-            return date.toLocaleDateString('ar-SA', {
+            var formatted = date.toLocaleDateString('ar-EG-u-nu-latn', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric'
             });
+            return toWesternNumerals(formatted);
         } catch (e) {
-            return dateStr;
+            return toWesternNumerals(dateStr);
         }
     }
 
