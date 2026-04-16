@@ -71,7 +71,10 @@
             console.error('getAllIngredients error:', error);
             return [];
         }
-        return (data || []).map(dbToIngredient);
+        // نرتب أبجدياً بالعربي عشان القوائم والبطاقات تكون منظمة
+        var result = (data || []).map(dbToIngredient);
+        result.sort(function (a, b) { return a.name.localeCompare(b.name, 'ar'); });
+        return result;
     }
 
     // ترجع مكون واحد حسب رقمه التعريفي، أو null لو ما وجدته.

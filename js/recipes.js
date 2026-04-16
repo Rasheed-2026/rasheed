@@ -105,9 +105,12 @@
             byRecipeId[entry.recipe_id].push(entry);
         });
 
-        return recipeRows.map(function (r) {
+        // نرتب أبجدياً بالعربي عشان القوائم والبطاقات تكون منظمة
+        var result = recipeRows.map(function (r) {
             return dbToRecipe(r, byRecipeId[r.id] || []);
         });
+        result.sort(function (a, b) { return a.name.localeCompare(b.name, 'ar'); });
+        return result;
     }
 
     // ترجع وصفة واحدة مع مكوناتها.
