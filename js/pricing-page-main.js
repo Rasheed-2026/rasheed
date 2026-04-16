@@ -199,6 +199,18 @@ function renderCalculationResult(calculation) {
     const highlight = document.createElement('div');
     highlight.className = 'profit-highlight';
 
+    // === صورة مصغّرة للوصفة (لو موجودة) ===
+    if (calculation.recipe.imageUrl) {
+        var thumbWrap = document.createElement('div');
+        thumbWrap.className = 'profit-highlight__thumb';
+        var thumbImg = document.createElement('img');
+        thumbImg.src = calculation.recipe.imageUrl;
+        thumbImg.alt = calculation.recipeName;
+        thumbImg.loading = 'lazy';
+        thumbWrap.appendChild(thumbImg);
+        highlight.appendChild(thumbWrap);
+    }
+
     const hLabel = document.createElement('div');
     hLabel.className = 'profit-highlight__label';
     hLabel.textContent = 'ستكسب من كل حصة';
@@ -601,42 +613,55 @@ async function performCalculation() {
 }
 
 // === تصدير صورة للعميل ===
-// نملأ القالب المخفي بمعلومات آخر حساب، ثم نستخدم
-// html2canvas لتحويله إلى صورة PNG ونحمّلها تلقائياً.
+// نفتح نافذة مخصصة بدل prompt، ثم نملأ القالب ونصدّر.
+
+// فتح نافذة التصدير
 function handleExportCustomerImage() {
-    // 1) نتأكد إن فيه حساب فعلي
     if (!lastCalculated) {
         alert('لا توجد نتيجة حساب لتصديرها.');
         return;
     }
-
-    // 2) نتأكد أن المكتبة تحمّلت
     if (typeof html2canvas !== 'function') {
         alert('مكتبة إنشاء الصورة لم تُحمّل. تحقق من اتصالك بالإنترنت.');
         return;
     }
 
-    // 3) نطلب من المستخدم رسالة لطيفة (مع قيمة افتراضية)
-    const defaultMsg = 'شكراً لطلبك';
-    const rawMsg = prompt('ما هي الرسالة التي تريد إضافتها للعميل؟', defaultMsg);
-    if (rawMsg === null) {
-        // ألغى الـ prompt — لا نفعل شيئاً
-        return;
-    }
-    const message = rawMsg.trim() || defaultMsg;
+    var modal = document.getElementById('customer-image-modal');
+    var messageInput = document.getElementById('customer-message');
+    var includeImageField = document.getElementById('include-image-field');
+    var includeImageCheckbox = document.getElementById('include-recipe-image');
 
-    // 4) نملأ القالب ببيانات آخر حساب
-    const template = document.getElementById('customer-image-template');
+    // نعيد ضبط الرسالة
+    messageInput.value = 'شكراً لطلبك';
+
+    // لو الوصفة عندها صورة: نظهر الخيار ونفعّله
+    // لو ما عندها: نخفيه
+    if (lastCalculated.recipe.imageUrl) {
+        includeImageField.hidden = false;
+        includeImageCheckbox.checked = true;
+    } else {
+        includeImageField.hidden = true;
+        includeImageCheckbox.checked = false;
+    }
+
+    modal.hidden = false;
+}
+
+// تنفيذ التصدير الفعلي بعد تأكيد المستخدم
+function executeCustomerImageExport(message, includeImage) {
+    var template = document.getElementById('customer-image-template');
     if (!template) {
         alert('قالب الصورة غير موجود.');
         return;
     }
 
-    const nameEl = template.querySelector('.customer-image-template__recipe-name');
-    const priceEl = template.querySelector('.customer-image-template__price-value');
-    const perEl = template.querySelector('.customer-image-template__per-serving-value');
-    const servingsNoteEl = template.querySelector('.customer-image-template__servings-note');
-    const msgEl = template.querySelector('.customer-image-template__message');
+    var nameEl = template.querySelector('.customer-image-template__recipe-name');
+    var priceEl = template.querySelector('.customer-image-template__price-value');
+    var perEl = template.querySelector('.customer-image-template__per-serving-value');
+    var servingsNoteEl = template.querySelector('.customer-image-template__servings-note');
+    var msgEl = template.querySelector('.customer-image-template__message');
+    var templateImgWrap = document.getElementById('customer-image-template-image');
+    var templateImg = document.getElementById('customer-image-template-img');
 
     nameEl.textContent = lastCalculated.recipeName;
     priceEl.textContent = pricing.formatSAR(lastCalculated.sellingPrice);
@@ -645,32 +670,69 @@ function handleExportCustomerImage() {
     } else {
         perEl.textContent = pricing.formatSAR(lastCalculated.perServing);
     }
-    const servings = Number(lastCalculated.recipe.servings) || 0;
+    var servings = Number(lastCalculated.recipe.servings) || 0;
     servingsNoteEl.textContent = servings > 0 ? '(' + servings + ' حصة)' : '';
     msgEl.textContent = message;
 
-    // 5) نرسم القالب ونحوّله إلى ملف PNG ونحمّله
-    html2canvas(template, { backgroundColor: null, scale: 2 }).then(function (canvas) {
+    // === صورة الوصفة داخل القالب ===
+    if (includeImage && lastCalculated.recipe.imageUrl) {
+        templateImg.src = lastCalculated.recipe.imageUrl;
+        templateImg.alt = lastCalculated.recipeName;
+        templateImgWrap.hidden = false;
+    } else {
+        templateImgWrap.hidden = true;
+        templateImg.src = '';
+    }
+
+    // نرسم القالب ونحوّله إلى ملف PNG ونحمّله
+    // useCORS: true عشان صور Supabase الخارجية ما تسبب مشاكل
+    html2canvas(template, { backgroundColor: null, scale: 2, useCORS: true, allowTaint: false }).then(function (canvas) {
         canvas.toBlob(function (blob) {
             if (!blob) {
                 alert('حدث خطأ أثناء إنشاء الصورة. حاول مرة أخرى.');
                 return;
             }
-            const url = URL.createObjectURL(blob);
-            const safeName = sanitizeFilename(lastCalculated.recipeName);
-            const a = document.createElement('a');
+            var url = URL.createObjectURL(blob);
+            var safeName = sanitizeFilename(lastCalculated.recipeName);
+            var a = document.createElement('a');
             a.href = url;
             a.download = 'تسعير-' + safeName + '.png';
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
-            // تنظيف: نحرر الذاكرة بعد مهلة قصيرة
             setTimeout(function () {
                 URL.revokeObjectURL(url);
             }, 1000);
         }, 'image/png');
-    }).catch(function () {
-        alert('حدث خطأ أثناء إنشاء الصورة. حاول مرة أخرى.');
+    }).catch(function (err) {
+        console.error('html2canvas error:', err);
+        // لو فشل بسبب الصورة، نحاول بدونها
+        if (includeImage && lastCalculated.recipe.imageUrl) {
+            console.warn('إعادة المحاولة بدون صورة الوصفة...');
+            templateImgWrap.hidden = true;
+            templateImg.src = '';
+            html2canvas(template, { backgroundColor: null, scale: 2 }).then(function (canvas) {
+                canvas.toBlob(function (blob) {
+                    if (!blob) {
+                        alert('حدث خطأ أثناء إنشاء الصورة.');
+                        return;
+                    }
+                    var url = URL.createObjectURL(blob);
+                    var safeName = sanitizeFilename(lastCalculated.recipeName);
+                    var a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'تسعير-' + safeName + '.png';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+                }, 'image/png');
+            }).catch(function () {
+                alert('حدث خطأ أثناء إنشاء الصورة. حاول مرة أخرى.');
+            });
+        } else {
+            alert('حدث خطأ أثناء إنشاء الصورة. حاول مرة أخرى.');
+        }
     });
 }
 
@@ -847,5 +909,38 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
             return;
         }
+    });
+
+    // === أحداث نافذة تصدير صورة العميل ===
+    var modal = document.getElementById('customer-image-modal');
+    var modalBackdrop = modal.querySelector('.modal__backdrop');
+    var cancelBtn = document.getElementById('customer-image-cancel');
+    var confirmBtn = document.getElementById('customer-image-confirm');
+
+    // إغلاق النافذة
+    function closeModal() {
+        modal.hidden = true;
+    }
+
+    cancelBtn.addEventListener('click', closeModal);
+    modalBackdrop.addEventListener('click', closeModal);
+
+    // إغلاق بمفتاح Escape
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !modal.hidden) {
+            closeModal();
+        }
+    });
+
+    // تأكيد التصدير
+    confirmBtn.addEventListener('click', function () {
+        var messageInput = document.getElementById('customer-message');
+        var includeCheckbox = document.getElementById('include-recipe-image');
+
+        var message = (messageInput.value || '').trim() || 'شكراً لطلبك';
+        var includeImage = includeCheckbox.checked;
+
+        closeModal();
+        executeCustomerImageExport(message, includeImage);
     });
 });

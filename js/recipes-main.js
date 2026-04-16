@@ -16,6 +16,14 @@ const ingredientsApi = window.tasceerIngredients;
 // متغير حالة: null = وضع الإضافة، غير ذلك = رقم الوصفة قيد التعديل
 let editingRecipeId = null;
 
+// === حالة صورة الوصفة ===
+// selectedImageFile: ملف الصورة اللي اختاره المستخدم (قبل الرفع)
+// existingImageUrl: لو نعدّل وصفة عندها صورة، نحفظ رابطها هنا
+// shouldRemoveImage: لو المستخدم ضغط زر الإزالة أثناء التعديل
+let selectedImageFile = null;
+let existingImageUrl = null;
+let shouldRemoveImage = false;
+
 // حالة فتح/إغلاق قسم المكونات لكل وصفة.
 // المفتاح = id الوصفة، القيمة = true (مفتوح) أو false/غير موجود (مغلق).
 // في الذاكرة فقط — عند إعادة تحميل الصفحة كل الأقسام تبدأ مغلقة.
@@ -97,6 +105,23 @@ async function renderRecipes() {
         const card = document.createElement('div');
         card.className = 'item-card';
         card.dataset.recipeId = recipe.id;
+
+        // === صورة الوصفة في أعلى البطاقة ===
+        if (recipe.imageUrl) {
+            var imgWrap = document.createElement('div');
+            imgWrap.className = 'recipe-card__image';
+            var imgEl = document.createElement('img');
+            imgEl.src = recipe.imageUrl;
+            imgEl.alt = recipe.name;
+            imgEl.loading = 'lazy';
+            imgWrap.appendChild(imgEl);
+            card.appendChild(imgWrap);
+        } else {
+            var placeholder = document.createElement('div');
+            placeholder.className = 'recipe-card__image recipe-card__image--placeholder';
+            placeholder.textContent = '🍰';
+            card.appendChild(placeholder);
+        }
 
         const info = document.createElement('div');
         info.className = 'item-info';
@@ -415,6 +440,25 @@ async function enterEditMode(id) {
         recipe.otherCost ?? 0
     );
 
+    // === حالة الصورة أثناء التعديل ===
+    selectedImageFile = null;
+    shouldRemoveImage = false;
+    existingImageUrl = recipe.imageUrl || null;
+
+    var preview = document.getElementById('recipe-image-preview');
+    var previewImg = document.getElementById('recipe-image-preview-img');
+    var uploadLabel = document.getElementById('recipe-image-label');
+
+    if (existingImageUrl) {
+        // نعرض الصورة الحالية كمعاينة
+        previewImg.src = existingImageUrl;
+        preview.hidden = false;
+        uploadLabel.hidden = true;
+    } else {
+        preview.hidden = true;
+        uploadLabel.hidden = false;
+    }
+
     document.getElementById('recipe-form-title').textContent = 'تعديل الوصفة';
     document.getElementById('recipe-submit-btn').textContent = 'حفظ التعديلات';
     document.getElementById('recipe-cancel-btn').hidden = false;
@@ -431,9 +475,26 @@ function exitEditMode() {
     // بعد reset() نرجع القيم الافتراضية للحقول الثلاثة
     fillPricingInputsWithDefaults();
     fillExtraCostInputsWithDefaults();
+
+    // نعيد ضبط حالة الصورة
+    resetImageState();
+
     document.getElementById('recipe-form-title').textContent = 'إضافة وصفة جديدة';
     document.getElementById('recipe-submit-btn').textContent = 'أضف الوصفة';
     document.getElementById('recipe-cancel-btn').hidden = true;
+}
+
+// يعيد ضبط كل حالة الصورة (بعد الحفظ أو الإلغاء)
+function resetImageState() {
+    selectedImageFile = null;
+    existingImageUrl = null;
+    shouldRemoveImage = false;
+    var preview = document.getElementById('recipe-image-preview');
+    var uploadLabel = document.getElementById('recipe-image-label');
+    var fileInput = document.getElementById('recipe-image');
+    if (preview) preview.hidden = true;
+    if (uploadLabel) uploadLabel.hidden = false;
+    if (fileInput) fileInput.value = '';
 }
 
 // === ربط الأحداث بعد ما تجهز الصفحة ===
@@ -446,6 +507,57 @@ document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('add-recipe-form');
     const listContainer = document.getElementById('recipes-list');
     const cancelBtn = document.getElementById('recipe-cancel-btn');
+
+    // === أحداث صورة الوصفة ===
+    var imageInput = document.getElementById('recipe-image');
+    var imageRemoveBtn = document.getElementById('recipe-image-remove');
+
+    // عند اختيار ملف صورة
+    imageInput.addEventListener('change', function () {
+        var file = imageInput.files[0];
+        if (!file) return;
+
+        // نتحقق إن الملف صورة بصيغة مدعومة
+        var allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        if (allowedTypes.indexOf(file.type) === -1) {
+            alert('الملف المختار ليس صورة مدعومة. اختر صورة بصيغة JPEG أو PNG أو WebP.');
+            imageInput.value = '';
+            return;
+        }
+
+        // نتحقق من الحجم (5 ميجا كحد أقصى قبل الضغط)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('حجم الصورة كبير جداً (أكثر من 5 ميجا). اختر صورة أصغر.');
+            imageInput.value = '';
+            return;
+        }
+
+        selectedImageFile = file;
+        shouldRemoveImage = false;
+
+        // نعرض معاينة الصورة
+        var reader = new FileReader();
+        reader.onload = function () {
+            var previewImg = document.getElementById('recipe-image-preview-img');
+            previewImg.src = reader.result;
+            document.getElementById('recipe-image-preview').hidden = false;
+            document.getElementById('recipe-image-label').hidden = true;
+        };
+        reader.readAsDataURL(file);
+    });
+
+    // عند الضغط على زر إزالة الصورة
+    imageRemoveBtn.addEventListener('click', function () {
+        selectedImageFile = null;
+        imageInput.value = '';
+        document.getElementById('recipe-image-preview').hidden = true;
+        document.getElementById('recipe-image-label').hidden = false;
+
+        // لو نعدّل وصفة وعندها صورة سابقة، نسجّل إننا نبغى نحذفها
+        if (editingRecipeId !== null && existingImageUrl) {
+            shouldRemoveImage = true;
+        }
+    });
 
     // === إضافة أو تعديل وصفة ===
     form.addEventListener('submit', async function (event) {
@@ -516,17 +628,45 @@ document.addEventListener('DOMContentLoaded', function () {
         submitBtn.textContent = 'جاري الحفظ...';
 
         try {
+            // === معالجة الصورة ===
+            // imageUrlForSave:
+            //   undefined = ما نلمس الصورة الحالية (في التعديل)
+            //   null     = نحذف الصورة
+            //   string   = رابط صورة جديدة
+            var imageUrlForSave = undefined;
+
+            if (selectedImageFile) {
+                // الحالة أ: المستخدم اختار صورة جديدة — نرفعها
+                imageUrlForSave = await recipesApi.uploadRecipeImage(selectedImageFile);
+                // لو فيه صورة قديمة، نحذفها من Storage
+                if (existingImageUrl) {
+                    recipesApi.deleteRecipeImage(existingImageUrl);
+                }
+            } else if (shouldRemoveImage) {
+                // الحالة ب: المستخدم ضغط إزالة — نمسح الصورة
+                imageUrlForSave = null;
+                if (existingImageUrl) {
+                    recipesApi.deleteRecipeImage(existingImageUrl);
+                }
+            }
+            // الحالة ج: ما لمس الصورة = imageUrlForSave يبقى undefined
+
             if (editingRecipeId === null) {
+                // إضافة وصفة جديدة
                 await recipesApi.addRecipe(name, servings, prepTime, cookTime, energySource,
                     hourlyRate, electricityRate, gasCylinderPrice,
-                    packagingCost, deliveryCost, otherCost);
+                    packagingCost, deliveryCost, otherCost,
+                    imageUrlForSave !== undefined ? imageUrlForSave : null);
                 form.reset();
                 fillPricingInputsWithDefaults();
                 fillExtraCostInputsWithDefaults();
+                resetImageState();
             } else {
+                // تعديل وصفة موجودة
                 await recipesApi.updateRecipe(editingRecipeId, name, servings, prepTime, cookTime, energySource,
                     hourlyRate, electricityRate, gasCylinderPrice,
-                    packagingCost, deliveryCost, otherCost);
+                    packagingCost, deliveryCost, otherCost,
+                    imageUrlForSave);
                 exitEditMode();
             }
             await renderRecipes();

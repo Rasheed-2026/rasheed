@@ -1879,3 +1879,247 @@ button,
         padding-inline: 24px;
     }
 }
+
+/* ============================================================
+   === رفع صورة الوصفة ===
+   ============================================================ */
+
+.image-upload {
+    position: relative;
+    inline-size: 100%;
+}
+
+/* حقل الملف الأصلي — نخفيه بصرياً لكن يبقى متاحاً للنقر عبر الليبل */
+.image-upload__input {
+    position: absolute;
+    inset-inline-start: -9999px;
+}
+
+/* منطقة السحب/الاختيار — تصميم بسيط بخط متقطع */
+.image-upload__label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-block: 32px;
+    padding-inline: 16px;
+    border: 2px dashed var(--color-border);
+    border-radius: 12px;
+    cursor: pointer;
+    background-color: #fafafa;
+    min-block-size: 120px;
+    text-align: center;
+    transition: border-color 0.15s, background-color 0.15s;
+}
+
+.image-upload__label:hover {
+    border-color: var(--color-primary);
+    background-color: #f0f7f0;
+}
+
+.image-upload__icon {
+    font-size: 2em;
+    margin-block-end: 8px;
+}
+
+.image-upload__text {
+    color: #555;
+    font-size: 0.95rem;
+}
+
+/* معاينة الصورة المختارة */
+.image-upload__preview {
+    position: relative;
+    max-inline-size: 300px;
+}
+
+.image-upload__preview img {
+    inline-size: 100%;
+    max-block-size: 300px;
+    object-fit: cover;
+    border-radius: 12px;
+}
+
+/* زر إزالة الصورة — دائرة حمراء في الزاوية */
+.image-upload__remove {
+    position: absolute;
+    inset-block-start: 8px;
+    inset-inline-end: 8px;
+    inline-size: 32px;
+    block-size: 32px;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: #ffffff;
+    border: none;
+    font-size: 1.2em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-block-size: auto;
+    min-inline-size: auto;
+    padding: 0;
+}
+
+.image-upload__remove:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+/* ============================================================
+   === صورة الوصفة في البطاقة ===
+   ============================================================ */
+
+.recipe-card__image {
+    inline-size: 100%;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    border-radius: 8px;
+    margin-block-end: 12px;
+}
+
+.recipe-card__image img {
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+}
+
+/* عنصر نائب لو ما فيه صورة — لون هادي مع أيقونة */
+.recipe-card__image--placeholder {
+    background-color: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3em;
+}
+
+/* ============================================================
+   === صورة مصغّرة في صندوق الربح (صفحة التسعير) ===
+   ============================================================ */
+
+.profit-highlight__thumb {
+    inline-size: 72px;
+    block-size: 72px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-inline: auto;
+    margin-block-end: 12px;
+    border: 2px solid #b7dcc4;
+}
+
+.profit-highlight__thumb img {
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+}
+
+/* ============================================================
+   === نافذة منبثقة (Modal) ===
+   ============================================================ */
+
+.modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-inline: 20px;
+    padding-block: 20px;
+}
+
+.modal[hidden] {
+    display: none;
+}
+
+.modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal__content {
+    position: relative;
+    background-color: #ffffff;
+    border-radius: 16px;
+    padding-block: 32px;
+    padding-inline: 32px;
+    max-inline-size: 480px;
+    inline-size: 100%;
+    z-index: 1;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.modal__title {
+    font-size: 1.3em;
+    font-weight: 700;
+    margin-block-end: 20px;
+    color: var(--color-primary);
+}
+
+.modal__input {
+    inline-size: 100%;
+    min-block-size: 44px;
+    padding-block: 12px;
+    padding-inline: 14px;
+    font-family: inherit;
+    font-size: 1rem;
+    color: var(--color-text);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+}
+
+.modal__input:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 1px;
+    border-color: var(--color-primary);
+}
+
+.modal__actions {
+    display: flex;
+    gap: 12px;
+    margin-block-start: 24px;
+    justify-content: flex-end;
+}
+
+/* ============================================================
+   === خانة اختيار مع نص بجانبها ===
+   ============================================================ */
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 0.95rem;
+}
+
+.checkbox-label input[type="checkbox"] {
+    inline-size: 20px;
+    block-size: 20px;
+    accent-color: var(--color-primary);
+    cursor: pointer;
+}
+
+/* ============================================================
+   === صورة الوصفة داخل قالب صورة العميل ===
+   ============================================================ */
+
+.customer-image-template__image {
+    inline-size: 100%;
+    max-block-size: 250px;
+    overflow: hidden;
+    border-radius: 12px;
+    margin-block-end: 20px;
+}
+
+.customer-image-template__image img {
+    inline-size: 100%;
+    block-size: 250px;
+    object-fit: cover;
+}
+
+/* حقل الصورة يأخذ عرض كامل حتى في الشبكة */
+.field--full {
+    grid-column: 1 / -1;
+}

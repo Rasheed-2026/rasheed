@@ -46,6 +46,7 @@
             packagingCost: Number(row.packaging_cost),
             deliveryCost: Number(row.delivery_cost),
             otherCost: Number(row.other_cost),
+            imageUrl: row.image_url || null,
             createdAt: row.created_at,
             ingredients: (ingredientEntries || []).map(dbToEntry)
         };
@@ -142,7 +143,8 @@
     }
 
     // تضيف وصفة جديدة (بدون مكونات — تضاف لاحقاً عبر addIngredientToRecipe)
-    async function addRecipe(name, servings, prepTime, cookTime, energySource, hourlyRate, electricityRate, gasCylinderPrice, packagingCost, deliveryCost, otherCost) {
+    // imageUrl اختياري — رابط صورة الوصفة في Supabase Storage
+    async function addRecipe(name, servings, prepTime, cookTime, energySource, hourlyRate, electricityRate, gasCylinderPrice, packagingCost, deliveryCost, otherCost, imageUrl) {
         const userId = await getCurrentUserId();
         if (!userId) {
             throw new Error('يجب تسجيل الدخول أولاً');
@@ -156,22 +158,28 @@
         if (!(del >= 0)) throw new Error('تكلفة التوصيل لازم تكون رقم صفر أو أكثر.');
         if (!(oth >= 0)) throw new Error('التكاليف الأخرى لازم تكون رقم صفر أو أكثر.');
 
+        var insertData = {
+            user_id: userId,
+            name: name.trim(),
+            servings: Number(servings),
+            prep_time_minutes: Number(prepTime),
+            cook_time_minutes: Number(cookTime),
+            energy_source: energySource,
+            hourly_rate: Number(hourlyRate),
+            electricity_rate: Number(electricityRate),
+            gas_cylinder_price: Number(gasCylinderPrice),
+            packaging_cost: pkg,
+            delivery_cost: del,
+            other_cost: oth
+        };
+        // نضيف رابط الصورة فقط لو موجود
+        if (imageUrl !== undefined && imageUrl !== null) {
+            insertData.image_url = imageUrl;
+        }
+
         const { data, error } = await window.supabaseClient
             .from('recipes')
-            .insert({
-                user_id: userId,
-                name: name.trim(),
-                servings: Number(servings),
-                prep_time_minutes: Number(prepTime),
-                cook_time_minutes: Number(cookTime),
-                energy_source: energySource,
-                hourly_rate: Number(hourlyRate),
-                electricity_rate: Number(electricityRate),
-                gas_cylinder_price: Number(gasCylinderPrice),
-                packaging_cost: pkg,
-                delivery_cost: del,
-                other_cost: oth
-            })
+            .insert(insertData)
             .select()
             .single();
 
@@ -183,7 +191,8 @@
     }
 
     // تعدّل حقول وصفة موجودة. لا نلمس recipe_ingredients هنا.
-    async function updateRecipe(id, name, servings, prepTime, cookTime, energySource, hourlyRate, electricityRate, gasCylinderPrice, packagingCost, deliveryCost, otherCost) {
+    // imageUrl: لو undefined = ما نلمس الصورة الحالية، لو null = نحذفها، لو string = نحدّثها
+    async function updateRecipe(id, name, servings, prepTime, cookTime, energySource, hourlyRate, electricityRate, gasCylinderPrice, packagingCost, deliveryCost, otherCost, imageUrl) {
         if (!id) throw new Error('رقم الوصفة مطلوب');
 
         const pkg = Number(packagingCost);
@@ -193,21 +202,28 @@
         if (!(del >= 0)) throw new Error('تكلفة التوصيل لازم تكون رقم صفر أو أكثر.');
         if (!(oth >= 0)) throw new Error('التكاليف الأخرى لازم تكون رقم صفر أو أكثر.');
 
+        var updateData = {
+            name: name.trim(),
+            servings: Number(servings),
+            prep_time_minutes: Number(prepTime),
+            cook_time_minutes: Number(cookTime),
+            energy_source: energySource,
+            hourly_rate: Number(hourlyRate),
+            electricity_rate: Number(electricityRate),
+            gas_cylinder_price: Number(gasCylinderPrice),
+            packaging_cost: pkg,
+            delivery_cost: del,
+            other_cost: oth
+        };
+        // نحدّث الصورة فقط لو المستخدم غيّرها أو حذفها
+        // undefined = ما نلمسها، null = نحذفها، string = صورة جديدة
+        if (imageUrl !== undefined) {
+            updateData.image_url = imageUrl;
+        }
+
         const { data, error } = await window.supabaseClient
             .from('recipes')
-            .update({
-                name: name.trim(),
-                servings: Number(servings),
-                prep_time_minutes: Number(prepTime),
-                cook_time_minutes: Number(cookTime),
-                energy_source: energySource,
-                hourly_rate: Number(hourlyRate),
-                electricity_rate: Number(electricityRate),
-                gas_cylinder_price: Number(gasCylinderPrice),
-                packaging_cost: pkg,
-                delivery_cost: del,
-                other_cost: oth
-            })
+            .update(updateData)
             .eq('id', id)
             .select()
             .single();
@@ -220,8 +236,20 @@
     }
 
     // تحذف وصفة. CASCADE في القاعدة يحذف recipe_ingredients التابعة.
+    // قبل الحذف: نجيب الوصفة عشان نحذف صورتها من Storage لو موجودة.
     async function deleteRecipe(id) {
         if (!id) throw new Error('رقم الوصفة مطلوب');
+
+        // نجيب الوصفة أولاً عشان نعرف لو عندها صورة
+        var imageUrl = null;
+        var fetchResult = await window.supabaseClient
+            .from('recipes')
+            .select('image_url')
+            .eq('id', id)
+            .single();
+        if (fetchResult.data && fetchResult.data.image_url) {
+            imageUrl = fetchResult.data.image_url;
+        }
 
         const { error } = await window.supabaseClient
             .from('recipes')
@@ -231,6 +259,11 @@
         if (error) {
             console.error('deleteRecipe error:', error);
             throw new Error('تعذر حذف الوصفة. حاول مرة أخرى.');
+        }
+
+        // بعد الحذف: ننظف الصورة من Storage (محاولة — لو فشلت ما يهم)
+        if (imageUrl) {
+            deleteRecipeImage(imageUrl);
         }
     }
 
@@ -300,6 +333,65 @@
         }
     }
 
+    // ===== رفع صورة وصفة إلى Supabase Storage =====
+    // ناخذ ملف الصورة، نضغطه، نرفعه، ونرجع الرابط العام.
+    async function uploadRecipeImage(file) {
+        var userId = await getCurrentUserId();
+        if (!userId) {
+            throw new Error('يجب تسجيل الدخول أولاً');
+        }
+
+        // نضغط الصورة قبل الرفع عشان نوفّر في الحجم والسرعة
+        var compressedBlob = await window.tasceerImageUtils.compressImage(file);
+
+        // ننشئ اسم فريد: مجلد المستخدم / وقت + رقم عشوائي
+        var randomStr = Math.random().toString(36).substring(2, 8);
+        var path = userId + '/' + Date.now() + '-' + randomStr + '.jpg';
+
+        // نرفع الصورة المضغوطة
+        var uploadResult = await window.supabaseClient.storage
+            .from('recipe-images')
+            .upload(path, compressedBlob, { contentType: 'image/jpeg' });
+
+        if (uploadResult.error) {
+            console.error('uploadRecipeImage error:', uploadResult.error);
+            throw new Error('فشل رفع الصورة. حاول مرة أخرى.');
+        }
+
+        // نجيب الرابط العام
+        var urlResult = window.supabaseClient.storage
+            .from('recipe-images')
+            .getPublicUrl(path);
+
+        return urlResult.data.publicUrl;
+    }
+
+    // ===== حذف صورة وصفة من Supabase Storage =====
+    // نستخرج المسار من الرابط ونحذف الملف.
+    // لو فشل الحذف نسجّل الخطأ بس ما نرمي استثناء (أفضل جهد).
+    async function deleteRecipeImage(imageUrl) {
+        try {
+            // نستخرج المسار: كل شي بعد /recipe-images/
+            var marker = '/recipe-images/';
+            var idx = imageUrl.indexOf(marker);
+            if (idx === -1) {
+                console.warn('deleteRecipeImage: تعذر استخراج المسار من الرابط');
+                return;
+            }
+            var path = decodeURIComponent(imageUrl.substring(idx + marker.length));
+
+            var result = await window.supabaseClient.storage
+                .from('recipe-images')
+                .remove([path]);
+
+            if (result.error) {
+                console.error('deleteRecipeImage error:', result.error);
+            }
+        } catch (err) {
+            console.error('deleteRecipeImage error:', err);
+        }
+    }
+
     window.tasceerRecipes = {
         getAllRecipes: getAllRecipes,
         getRecipeById: getRecipeById,
@@ -308,6 +400,8 @@
         deleteRecipe: deleteRecipe,
         addIngredientToRecipe: addIngredientToRecipe,
         removeIngredientFromRecipe: removeIngredientFromRecipe,
-        updateIngredientInRecipe: updateIngredientInRecipe
+        updateIngredientInRecipe: updateIngredientInRecipe,
+        uploadRecipeImage: uploadRecipeImage,
+        deleteRecipeImage: deleteRecipeImage
     };
 })();

@@ -86,6 +86,9 @@
              المكتبة تقدر ترسمه). JS يملأ محتواه عند التصدير. -->
         <div id="customer-image-template" class="customer-image-template" aria-hidden="true">
             <div class="customer-image-template__inner">
+                <div id="customer-image-template-image" class="customer-image-template__image" hidden>
+                    <img src="" alt="" id="customer-image-template-img">
+                </div>
                 <h2 class="customer-image-template__recipe-name"></h2>
                 <div class="customer-image-template__price-main">
                     <div class="customer-image-template__price-label">السعر</div>
@@ -97,6 +100,31 @@
                     <div class="customer-image-template__servings-note"></div>
                 </div>
                 <div class="customer-image-template__message"></div>
+            </div>
+        </div>
+
+        <!-- نافذة تصدير صورة العميل (بديل prompt) -->
+        <div id="customer-image-modal" class="modal" hidden>
+            <div class="modal__backdrop"></div>
+            <div class="modal__content">
+                <h3 class="modal__title">تصدير صورة للعميل</h3>
+
+                <div class="field">
+                    <label for="customer-message">الرسالة للعميل</label>
+                    <input type="text" id="customer-message" value="شكراً لطلبك" maxlength="100" class="modal__input">
+                </div>
+
+                <div class="field" id="include-image-field">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="include-recipe-image" checked>
+                        <span>إضافة صورة الوصفة</span>
+                    </label>
+                </div>
+
+                <div class="modal__actions">
+                    <button type="button" class="btn btn-secondary" id="customer-image-cancel">إلغاء</button>
+                    <button type="button" class="btn btn-primary" id="customer-image-confirm">تصدير الصورة</button>
+                </div>
             </div>
         </div>
     </main>
@@ -112,6 +140,7 @@
     <!-- ترتيب التحميل مهم — كل ملف يعتمد على اللي قبله:
          ingredients → settings → recipes → pricing → ملف الواجهة -->
     <script src="js/ingredients.js"></script>
+    <script src="js/image-utils.js"></script>
     <script src="js/recipes.js"></script>
     <script src="js/pricing.js"></script>
     <script src="js/pricing-page-main.js"></script>
