@@ -1694,3 +1694,188 @@ button,
     color: var(--color-text);
     border-color: var(--color-muted);
 }
+
+/* ============================================================
+   صفحة الهبوط (Landing Page)
+   ============================================================ */
+
+.landing-body {
+    margin: 0;
+    font-family: var(--font-arabic);
+    background-color: var(--color-bg);
+    color: var(--color-text);
+}
+
+.landing {
+    max-inline-size: 1200px;
+    margin-inline: auto;
+    padding-inline: 20px;
+}
+
+/* --- Hero --- */
+.landing-hero {
+    padding-block: 80px 60px;
+    text-align: center;
+}
+
+.landing-hero__title {
+    font-size: 4em;
+    font-weight: 900;
+    color: var(--color-primary);
+    margin: 0;
+    letter-spacing: -0.02em;
+    text-align: center;
+}
+
+.landing-hero__tagline {
+    font-size: 1.3em;
+    color: var(--color-muted);
+    margin-block: 8px 32px;
+}
+
+.landing-hero__description {
+    font-size: 1.2em;
+    max-inline-size: 600px;
+    margin-inline: auto;
+    margin-block-end: 40px;
+    line-height: 1.7;
+    color: #444;
+}
+
+/* --- زر CTA الرئيسي --- */
+.landing-cta {
+    display: inline-block;
+    background-color: var(--color-primary);
+    color: #ffffff;
+    padding-block: 16px;
+    padding-inline: 48px;
+    border-radius: 12px;
+    font-size: 1.2em;
+    font-weight: 700;
+    font-family: var(--font-arabic);
+    text-decoration: none;
+    transition: transform 0.15s, background-color 0.15s;
+    cursor: pointer;
+    min-block-size: 52px;
+}
+
+.landing-cta:hover {
+    transform: translateY(-2px);
+    background-color: var(--color-primary-hover);
+}
+
+/* --- قسم المميزات --- */
+.landing-features {
+    padding-block: 80px;
+    text-align: center;
+}
+
+.landing-features__title {
+    font-size: 2em;
+    font-weight: 700;
+    margin-block-end: 48px;
+    color: var(--color-primary);
+}
+
+.landing-features__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 32px;
+}
+
+.landing-feature {
+    background-color: var(--color-surface);
+    padding-block: 32px;
+    padding-inline: 24px;
+    border-radius: 16px;
+    text-align: center;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.landing-feature__icon {
+    font-size: 3em;
+    margin-block-end: 16px;
+}
+
+.landing-feature__title {
+    font-size: 1.2em;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-block-end: 12px;
+}
+
+.landing-feature__description {
+    color: #555;
+    line-height: 1.6;
+    font-size: 0.95em;
+}
+
+/* --- CTA النهائي --- */
+.landing-final-cta {
+    padding-block: 80px;
+    text-align: center;
+    background-color: var(--color-surface);
+    border-radius: 24px;
+    margin-block: 40px;
+    padding-inline: 40px;
+}
+
+.landing-final-cta__title {
+    font-size: 2em;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-block-end: 16px;
+}
+
+.landing-final-cta__subtitle {
+    color: #555;
+    margin-block-end: 32px;
+    max-inline-size: 500px;
+    margin-inline: auto;
+}
+
+/* --- Footer --- */
+.landing-footer {
+    text-align: center;
+    padding-block: 40px;
+    color: var(--color-muted);
+    font-size: 0.9em;
+}
+
+/* --- شبكة المميزات: عمودين على الشاشات المتوسطة --- */
+@media (min-width: 600px) {
+    .landing-features__grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* --- شبكة المميزات: أربع أعمدة على الشاشات الكبيرة --- */
+@media (min-width: 900px) {
+    .landing-features__grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+/* --- تعديلات الجوال --- */
+@media (max-width: 600px) {
+    .landing-hero__title {
+        font-size: 3em;
+    }
+
+    .landing-hero {
+        padding-block: 60px 40px;
+    }
+
+    .landing-features {
+        padding-block: 60px;
+    }
+
+    .landing-features__title {
+        font-size: 1.6em;
+    }
+
+    .landing-final-cta {
+        padding-block: 60px;
+        padding-inline: 24px;
+    }
+}

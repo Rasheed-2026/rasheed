@@ -1,122 +1,100 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>المكونات — رشيد</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>رشيد — حاسبة تسعير ذكية للأسر المنتجة</title>
 
-    <!-- خط عربي من Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+  <!-- خط عربي من Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/styles.css">
 </head>
-<body>
-    <!-- ترويسة التطبيق: الاسم + شريط التنقل في صف واحد -->
-    <header class="app-header">
-        <h1 class="app-header__title">رشيد</h1>
-        <nav class="nav" aria-label="القائمة الرئيسية">
-            <div class="nav__main-links">
-                <a href="index.html" class="nav-link nav-link--active">المكونات</a>
-                <a href="recipes.html" class="nav-link">الوصفات</a>
-                <a href="pricing-page.html" class="nav-link">التسعير</a>
-                <a href="shopping.html" class="nav-link">قائمة التسوق</a>
-            </div>
-            <div class="nav__help-link">
-                <a href="help.html" class="nav-link">كيف تستخدم؟</a>
-                <button id="logout-btn" class="btn btn--logout">تسجيل الخروج</button>
-            </div>
-        </nav>
-    </header>
+<body class="landing-body">
+  <!-- Supabase CDN + client (needed to check if user is logged in) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabase-client.js"></script>
 
-    <main class="container">
-        <h1>المكونات</h1>
-        <p class="intro">أضف المكونات التي تستخدمها في منتجاتك. سنستخدمها لاحقاً في حساب تكلفة الوصفات.</p>
+  <main class="landing">
 
-        <!-- نموذج إضافة مكون جديد -->
-        <section class="card form-section" aria-labelledby="add-form-title">
-            <h2 id="add-form-title">إضافة مكون جديد</h2>
+    <!-- Hero section -->
+    <section class="landing-hero">
+      <div class="landing-hero__content">
+        <h1 class="landing-hero__title">رشيد</h1>
+        <p class="landing-hero__tagline">مستشارك في التسعير</p>
+        <p class="landing-hero__description">
+          يساعدك تعرف التكلفة الحقيقية لمنتجاتك ويحسب لك السعر المناسب بدقة وشفافية.
+        </p>
+        <a href="auth.html" id="cta-start-btn" class="landing-cta">ابدأ الآن</a>
+      </div>
+    </section>
 
-            <form id="add-ingredient-form" novalidate>
-                <div class="field">
-                    <label for="ingredient-name">اسم المكون</label>
-                    <input
-                        type="text"
-                        id="ingredient-name"
-                        name="ingredient-name"
-                        placeholder="مثال: طحين"
-                        required
-                    >
-                </div>
+    <!-- Features section -->
+    <section class="landing-features">
+      <h2 class="landing-features__title">كل ما تحتاجه في مكان واحد</h2>
+      <div class="landing-features__grid">
 
-                <div class="field">
-                    <label for="package-amount">حجم العبوة</label>
-                    <input
-                        type="number"
-                        id="package-amount"
-                        name="package-amount"
-                        placeholder="مثال: 5"
-                        min="0"
-                        step="any"
-                        required
-                    >
-                </div>
-
-                <div class="field">
-                    <label for="package-unit">الوحدة</label>
-                    <select id="package-unit" name="package-unit" required>
-                        <option value="g">جرام</option>
-                        <option value="kg">كيلوجرام</option>
-                        <option value="ml">مليلتر</option>
-                        <option value="l">لتر</option>
-                        <option value="piece">حبة / قطعة</option>
-                    </select>
-                </div>
-
-                <div class="field">
-                    <label for="package-price">سعر العبوة (ريال)</label>
-                    <input
-                        type="number"
-                        id="package-price"
-                        name="package-price"
-                        placeholder="مثال: 25"
-                        min="0"
-                        step="any"
-                        required
-                    >
-                </div>
-
-                <div class="form-actions">
-                    <button type="submit" id="submit-btn" class="btn btn-primary">أضف المكون</button>
-                    <button type="button" id="cancel-edit-btn" class="btn btn-secondary" hidden>إلغاء</button>
-                </div>
-            </form>
-        </section>
-
-        <!-- قائمة المكونات المضافة -->
-        <section class="list-section" aria-labelledby="list-title">
-            <h2 id="list-title">المكونات المضافة</h2>
-            <div id="ingredients-list" class="ingredients-grid">
-                <p class="empty-state">لم تضف أي مكونات بعد.</p>
-            </div>
-        </section>
-
-        <!-- سهم الانتقال للصفحة التالية -->
-        <div class="next-page-arrow">
-            <a href="recipes.html" class="next-page-arrow__link">
-                التالي: الوصفات
-                <span class="next-page-arrow__icon" aria-hidden="true">←</span>
-            </a>
+        <div class="landing-feature">
+          <div class="landing-feature__icon">🧮</div>
+          <h3 class="landing-feature__title">حساب دقيق للتكلفة</h3>
+          <p class="landing-feature__description">احسب تكلفة المواد، الطاقة، وقتك، والتكاليف الإضافية بدقة كاملة.</p>
         </div>
-    </main>
 
-    <!-- Supabase أولاً: المكتبة، ثم تهيئة العميل، ثم حارس الصفحة -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-    <script src="js/supabase-client.js"></script>
-    <script src="js/auth-guard.js"></script>
-    <!-- ترتيب مهم: ingredients.js يجي أول عشان main.js يقدر يستخدم دواله -->
-    <script src="js/ingredients.js"></script>
-    <script src="js/main.js"></script>
+        <div class="landing-feature">
+          <div class="landing-feature__icon">💰</div>
+          <h3 class="landing-feature__title">الربح الصافي بوضوح</h3>
+          <p class="landing-feature__description">اعرف كم تكسب من كل حصة قبل ما تبيع. ما في مفاجآت.</p>
+        </div>
+
+        <div class="landing-feature">
+          <div class="landing-feature__icon">🛒</div>
+          <h3 class="landing-feature__title">قوائم تسوق ذكية</h3>
+          <p class="landing-feature__description">اجمع مكونات عدة وصفات في قائمة واحدة مع التكلفة الكاملة.</p>
+        </div>
+
+        <div class="landing-feature">
+          <div class="landing-feature__icon">📸</div>
+          <h3 class="landing-feature__title">صور جاهزة للعملاء</h3>
+          <p class="landing-feature__description">أرسل لعميلك صورة احترافية بالسعر عبر واتساب بضغطة واحدة.</p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Final CTA -->
+    <section class="landing-final-cta">
+      <h2 class="landing-final-cta__title">جاهز تبدأ؟</h2>
+      <p class="landing-final-cta__subtitle">رشيد مجاني بالكامل. سجّل في أقل من دقيقة وابدأ أول وصفة.</p>
+      <a href="auth.html" id="cta-final-btn" class="landing-cta">ابدأ الآن</a>
+    </section>
+
+    <!-- Footer -->
+    <footer class="landing-footer">
+      <p>© رشيد ٢٠٢٦</p>
+    </footer>
+
+  </main>
+
+  <!-- Script to redirect the CTA buttons to ingredients.html if already logged in -->
+  <script>
+    // التحقق: لو المستخدم مسجل دخول، نحول أزرار "ابدأ الآن" لصفحة المكونات
+    (async function updateCTAs() {
+      try {
+        const { data: { session } } = await window.supabaseClient.auth.getSession();
+        if (session) {
+          // المستخدم مسجل دخول — نوجه الأزرار مباشرة لصفحة المكونات
+          const ctaButtons = document.querySelectorAll('.landing-cta');
+          ctaButtons.forEach(btn => {
+            btn.setAttribute('href', 'ingredients.html');
+            btn.textContent = 'ادخل للبرنامج';
+          });
+        }
+      } catch (error) {
+        console.error('Error checking session:', error);
+      }
+    })();
+  </script>
 </body>
 </html>

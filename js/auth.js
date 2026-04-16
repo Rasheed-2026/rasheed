@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ١. لو المستخدم مسجّل دخول أصلاً، نحوّله مباشرة للتطبيق
     const { data: sessionData } = await window.supabaseClient.auth.getSession();
     if (sessionData.session) {
-        window.location.href = 'index.html';
+        window.location.href = 'ingredients.html';
         return;
     }
 
@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         // نجاح الدخول → للصفحة الرئيسية
-        window.location.href = 'index.html';
+        window.location.href = 'ingredients.html';
     });
 
     // ٤. معالج إنشاء الحساب
