@@ -2195,3 +2195,219 @@ button,
 .field--full {
     grid-column: 1 / -1;
 }
+
+/* ============================================================
+   صفحة الطلبات وإدارة العملاء
+   ============================================================ */
+
+/* منطقة اختيار العميل */
+.customer-select {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+}
+.customer-select select {
+    flex: 1;
+}
+
+/* نموذج مضمّن (إضافة عميل جديد) */
+.inline-form {
+    background: var(--color-bg);
+    padding: 16px;
+    border-radius: var(--radius);
+    margin-block: 12px;
+}
+.inline-form__actions {
+    display: flex;
+    gap: 8px;
+    margin-block-start: 12px;
+}
+
+/* صف حقول مرن */
+.form-row {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+.form-row > .field {
+    flex: 1;
+    min-inline-size: 180px;
+}
+.form-row--items {
+    align-items: flex-end;
+}
+
+/* عناصر الطلب في النموذج */
+.order-item-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-block-end: 1px solid var(--color-border);
+}
+.order-item-row__info {
+    flex: 1;
+}
+.order-item-row__unit-price {
+    font-size: 0.85em;
+    color: var(--color-muted);
+}
+
+/* مجموع الطلب */
+.order-total {
+    font-size: 1.2em;
+    font-weight: 700;
+    color: var(--color-primary);
+    padding: 12px 0;
+    text-align: center;
+    border-block-start: 2px solid var(--color-primary);
+    margin-block-start: 12px;
+}
+
+/* فلاتر الطلبات (الحالية / المكتملة / الكل) */
+.order-filters {
+    display: flex;
+    gap: 8px;
+    margin-block: 24px;
+    flex-wrap: wrap;
+}
+.order-filter {
+    padding: 8px 20px;
+    border: 1px solid var(--color-border);
+    border-radius: 20px;
+    background: transparent;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.95em;
+    min-block-size: 44px;
+}
+.order-filter--active {
+    background: var(--color-primary);
+    color: #fff;
+    border-color: var(--color-primary);
+}
+
+/* قائمة بطاقات الطلبات */
+.orders-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* بطاقة طلب واحد */
+.order-card {
+    background: var(--color-surface);
+    border-radius: 12px;
+    padding: 20px;
+    border-inline-start: 5px solid var(--color-border);
+}
+.order-card--new {
+    border-inline-start-color: #3498db;
+}
+.order-card--preparing {
+    border-inline-start-color: #f39c12;
+}
+.order-card--ready {
+    border-inline-start-color: #27ae60;
+}
+.order-card--delivered {
+    border-inline-start-color: #95a5a6;
+    opacity: 0.8;
+}
+
+.order-card__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-block-end: 12px;
+}
+.order-card__customer strong {
+    font-size: 1.1em;
+}
+.order-card__delivery-method {
+    font-size: 0.85em;
+    color: var(--color-muted);
+    margin-inline-start: 8px;
+}
+.order-card__date {
+    color: var(--color-soft);
+    font-size: 0.9em;
+}
+.order-card__items {
+    color: var(--color-soft);
+    margin-block-end: 8px;
+    line-height: 1.6;
+}
+.order-card__total {
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-block-end: 8px;
+}
+.order-card__notes {
+    color: var(--color-muted);
+    font-size: 0.9em;
+    margin-block-end: 8px;
+}
+.order-card__status {
+    margin-block-end: 12px;
+}
+
+/* شارات الحالة */
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.85em;
+    font-weight: 500;
+    display: inline-block;
+}
+.status-badge--new {
+    background: #ebf5fb;
+    color: #2980b9;
+}
+.status-badge--preparing {
+    background: #fef9e7;
+    color: #f39c12;
+}
+.status-badge--ready {
+    background: #eafaf1;
+    color: #27ae60;
+}
+.status-badge--delivered {
+    background: #f2f3f4;
+    color: #95a5a6;
+}
+
+/* أزرار بطاقة الطلب */
+.order-card__actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* زر كامل العرض */
+.btn--full {
+    inline-size: 100%;
+    margin-block-start: 12px;
+}
+
+/* ============================================================
+   ذيل الصفحة (Footer)
+   ============================================================ */
+.app-footer {
+    text-align: center;
+    padding: 24px;
+    color: var(--color-soft);
+    font-size: 0.85em;
+    margin-block-start: 40px;
+    border-block-start: 1px solid var(--color-border);
+}
+.app-footer__link {
+    color: var(--color-primary);
+    text-decoration: none;
+}
+.app-footer__link:hover {
+    text-decoration: underline;
+}
+.app-footer__separator {
+    margin-inline: 8px;
+}

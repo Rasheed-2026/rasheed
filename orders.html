@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الطلبات — رشيد</title>
+
+    <!-- خط عربي من Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- ترويسة التطبيق -->
+    <header class="app-header">
+        <a href="index.html" class="app-header__title-link">
+            <h1 class="app-header__title">رشيد</h1>
+        </a>
+        <button class="hamburger-btn" id="hamburger-btn" aria-label="القائمة">☰</button>
+        <div class="nav-menu" id="nav-menu">
+            <nav class="nav" aria-label="القائمة الرئيسية">
+                <div class="nav__main-links">
+                    <a href="ingredients.html" class="nav-link">المكونات</a>
+                    <a href="recipes.html" class="nav-link">الوصفات</a>
+                    <a href="pricing-page.html" class="nav-link">التسعير</a>
+                    <a href="shopping.html" class="nav-link">قائمة التسوق</a>
+                    <a href="orders.html" class="nav-link nav-link--active">الطلبات</a>
+                </div>
+            </nav>
+            <button id="logout-btn" class="btn btn--logout">تسجيل الخروج</button>
+        </div>
+    </header>
+
+    <main class="container">
+        <h1>الطلبات</h1>
+        <p class="intro">تابع طلبات عملائك من الاستلام حتى التسليم.</p>
+
+        <!-- القسم 1: طلب جديد -->
+        <section class="card form-section" aria-labelledby="new-order-title">
+            <h2 id="new-order-title">طلب جديد</h2>
+
+            <!-- اختيار العميل -->
+            <div class="field">
+                <label for="customer-select">العميل</label>
+                <div class="customer-select">
+                    <select id="customer-select">
+                        <option value="">اختر عميل</option>
+                    </select>
+                    <button type="button" id="add-new-customer-btn" class="btn btn--secondary btn--small">+ عميل جديد</button>
+                </div>
+            </div>
+
+            <!-- نموذج إضافة عميل جديد (مخفي افتراضياً) -->
+            <div id="new-customer-form" class="inline-form" hidden>
+                <div class="form-row">
+                    <div class="field">
+                        <label for="customer-name">اسم العميل</label>
+                        <input type="text" id="customer-name" required placeholder="مثال: أم خالد">
+                    </div>
+                    <div class="field">
+                        <label for="customer-phone">رقم الجوال</label>
+                        <input type="tel" id="customer-phone" required placeholder="05XXXXXXXX" dir="ltr">
+                    </div>
+                </div>
+                <div class="field">
+                    <label for="customer-notes">ملاحظات عن العميل (اختياري)</label>
+                    <input type="text" id="customer-notes" placeholder="مثال: تحب بدون سكر">
+                </div>
+                <div class="inline-form__actions">
+                    <button type="button" id="save-new-customer-btn" class="btn btn--primary btn--small">حفظ العميل</button>
+                    <button type="button" id="cancel-new-customer-btn" class="btn btn--secondary btn--small">إلغاء</button>
+                </div>
+            </div>
+
+            <!-- تفاصيل التسليم -->
+            <div class="form-row">
+                <div class="field">
+                    <label for="delivery-date">تاريخ التسليم</label>
+                    <input type="date" id="delivery-date" required>
+                </div>
+                <div class="field">
+                    <label for="delivery-method">طريقة التسليم</label>
+                    <select id="delivery-method">
+                        <option value="pickup">استلام</option>
+                        <option value="delivery">توصيل</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- الوصفات المطلوبة -->
+            <h3>الوصفات المطلوبة</h3>
+            <div class="form-row form-row--items">
+                <div class="field" style="flex:2">
+                    <select id="order-recipe-select">
+                        <option value="">اختر وصفة</option>
+                    </select>
+                </div>
+                <div class="field" style="flex:1">
+                    <input type="number" id="order-recipe-quantity" min="1" value="1" placeholder="الكمية">
+                </div>
+                <div class="field" style="flex:1">
+                    <input type="number" id="order-recipe-price" min="0" step="0.01" placeholder="السعر (ريال)">
+                </div>
+                <button type="button" id="add-order-item-btn" class="btn btn--primary btn--small">أضف</button>
+            </div>
+
+            <div id="order-items-list">
+                <!-- JS يعرض العناصر المضافة هنا -->
+            </div>
+
+            <div id="order-total" class="order-total" hidden>
+                الإجمالي: <span id="order-total-amount">0</span> ريال
+            </div>
+
+            <!-- ملاحظات الطلب -->
+            <div class="field">
+                <label for="order-notes">ملاحظات على الطلب (اختياري)</label>
+                <input type="text" id="order-notes" placeholder="مثال: بدون مكسرات، تسليم الساعة 6">
+            </div>
+
+            <button type="button" id="save-order-btn" class="btn btn--primary btn--full">حفظ الطلب</button>
+        </section>
+
+        <!-- زر إنشاء قائمة تسوق من الطلبات -->
+        <button id="generate-shopping-from-orders" class="btn btn--secondary btn--full">🛒 أنشئ قائمة تسوق من الطلبات الحالية</button>
+
+        <!-- فلاتر الطلبات -->
+        <div class="order-filters">
+            <button class="order-filter order-filter--active" data-status="active">الطلبات الحالية</button>
+            <button class="order-filter" data-status="delivered">المكتملة</button>
+            <button class="order-filter" data-status="all">الكل</button>
+        </div>
+
+        <!-- قائمة الطلبات -->
+        <div id="orders-list" class="orders-list">
+            <!-- JS يعرض بطاقات الطلبات هنا -->
+        </div>
+    </main>
+
+    <footer class="app-footer">
+        <a href="help.html" class="app-footer__link">كيف تستخدم؟</a>
+        <span class="app-footer__separator">|</span>
+        <span class="app-footer__copyright">© رشيد ٢٠٢٦</span>
+    </footer>
+
+    <!-- Supabase أولاً: المكتبة، ثم تهيئة العميل، ثم حارس الصفحة -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/auth-guard.js"></script>
+    <script src="js/ingredients.js"></script>
+    <script src="js/recipes.js"></script>
+    <script src="js/pricing.js"></script>
+    <script src="js/customers.js"></script>
+    <script src="js/orders.js"></script>
+    <script src="js/orders-main.js"></script>
+</body>
+</html>

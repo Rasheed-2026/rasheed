@@ -88,6 +88,23 @@
 
         populateRecipeSelect(recipes);
         wireEvents();
+
+        // جسر من صفحة الطلبات: لو فيه طلبات محوّلة لقائمة تسوق
+        var ordersToShopping = localStorage.getItem('tasceer_orders_to_shopping');
+        if (ordersToShopping) {
+            try {
+                var selections = JSON.parse(ordersToShopping);
+                if (Array.isArray(selections) && selections.length > 0) {
+                    currentSelections = selections;
+                    renderSelectedRecipes();
+                    renderShoppingResult();
+                }
+            } catch (e) {
+                console.error('خطأ في قراءة بيانات الطلبات:', e);
+            }
+            localStorage.removeItem('tasceer_orders_to_shopping');
+        }
+
         await renderSavedLists();
     });
 
