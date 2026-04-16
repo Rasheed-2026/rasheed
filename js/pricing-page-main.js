@@ -648,7 +648,7 @@ function handleExportCustomerImage() {
 }
 
 // تنفيذ التصدير الفعلي بعد تأكيد المستخدم
-function executeCustomerImageExport(message, includeImage) {
+function executeCustomerImageExport(message, includeImage, shouldRound) {
     var template = document.getElementById('customer-image-template');
     if (!template) {
         alert('قالب الصورة غير موجود.');
@@ -664,13 +664,27 @@ function executeCustomerImageExport(message, includeImage) {
     var templateImg = document.getElementById('customer-image-template-img');
 
     nameEl.textContent = lastCalculated.recipeName;
-    priceEl.textContent = pricing.formatSAR(lastCalculated.sellingPrice);
-    if (lastCalculated.perServing === null) {
-        perEl.textContent = '—';
-    } else {
-        perEl.textContent = pricing.formatSAR(lastCalculated.perServing);
-    }
+
     var servings = Number(lastCalculated.recipe.servings) || 0;
+
+    // === تقريب الأسعار (فقط للصورة المُصدّرة) ===
+    // لو المستخدم فعّل التقريب: نقرّب سعر الحصة لأعلى (ceil)
+    // ونحسب الإجمالي = حصة مقرّبة × عدد الحصص — عشان الأرقام تتطابق
+    if (shouldRound && lastCalculated.perServing !== null && servings > 0) {
+        var roundedPerServing = Math.ceil(lastCalculated.perServing);
+        var roundedTotal = roundedPerServing * servings;
+        priceEl.textContent = roundedTotal + ' ريال';
+        perEl.textContent = roundedPerServing + ' ريال';
+    } else {
+        // بدون تقريب — نعرض الأرقام الدقيقة
+        priceEl.textContent = pricing.formatSAR(lastCalculated.sellingPrice);
+        if (lastCalculated.perServing === null) {
+            perEl.textContent = '—';
+        } else {
+            perEl.textContent = pricing.formatSAR(lastCalculated.perServing);
+        }
+    }
+
     servingsNoteEl.textContent = servings > 0 ? '(' + servings + ' حصة)' : '';
     msgEl.textContent = message;
 
@@ -936,11 +950,13 @@ document.addEventListener('DOMContentLoaded', async function () {
     confirmBtn.addEventListener('click', function () {
         var messageInput = document.getElementById('customer-message');
         var includeCheckbox = document.getElementById('include-recipe-image');
+        var roundCheckbox = document.getElementById('round-prices');
 
         var message = (messageInput.value || '').trim() || 'شكراً لطلبك';
         var includeImage = includeCheckbox.checked;
+        var shouldRound = roundCheckbox.checked;
 
         closeModal();
-        executeCustomerImageExport(message, includeImage);
+        executeCustomerImageExport(message, includeImage, shouldRound);
     });
 });
