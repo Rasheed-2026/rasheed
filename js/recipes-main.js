@@ -442,10 +442,6 @@ async function enterEditMode(id) {
         recipe.gasCylinderPrice ?? d.DEFAULT_GAS_CYLINDER_PRICE
     );
 
-    // سعر البيع: نعبّيه لو موجود
-    document.getElementById('recipe-selling-price').value =
-        recipe.sellingPrice ? recipe.sellingPrice : '';
-
     // التكاليف الإضافية: للوصفات القديمة نعرض 0
     fillExtraCostInputs(
         recipe.packagingCost ?? 0,
@@ -593,8 +589,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const deliveryCost = parseFloat(normalizeNumericInput(document.getElementById('recipe-delivery-cost').value));
         const otherCost = parseFloat(normalizeNumericInput(document.getElementById('recipe-other-cost').value));
 
-        // سعر البيع — اختياري
-        const sellingPrice = parseFloat(normalizeNumericInput(document.getElementById('recipe-selling-price').value)) || null;
 
         // تحقق بسيط من صحة المدخلات
         if (name === '') {
@@ -672,8 +666,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 await recipesApi.addRecipe(name, servings, prepTime, cookTime, energySource,
                     hourlyRate, electricityRate, gasCylinderPrice,
                     packagingCost, deliveryCost, otherCost,
-                    imageUrlForSave !== undefined ? imageUrlForSave : null,
-                    sellingPrice);
+                    imageUrlForSave !== undefined ? imageUrlForSave : null);
                 form.reset();
                 fillPricingInputsWithDefaults();
                 fillExtraCostInputsWithDefaults();
@@ -683,8 +676,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 await recipesApi.updateRecipe(editingRecipeId, name, servings, prepTime, cookTime, energySource,
                     hourlyRate, electricityRate, gasCylinderPrice,
                     packagingCost, deliveryCost, otherCost,
-                    imageUrlForSave,
-                    sellingPrice);
+                    imageUrlForSave);
                 exitEditMode();
             }
             await renderRecipes();
