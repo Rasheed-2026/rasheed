@@ -1971,7 +1971,7 @@ button,
 
 .recipe-card__image {
     inline-size: 100%;
-    aspect-ratio: 16 / 10;
+    block-size: 160px;
     overflow: hidden;
     border-radius: 8px;
     margin-block-end: 12px;
@@ -1985,6 +1985,7 @@ button,
 
 /* عنصر نائب لو ما فيه صورة — لون هادي مع أيقونة */
 .recipe-card__image--placeholder {
+    block-size: 160px;
     background-color: #f0f0f0;
     display: flex;
     align-items: center;
@@ -2107,7 +2108,6 @@ button,
 
 .customer-image-template__image {
     inline-size: 100%;
-    max-block-size: 250px;
     overflow: hidden;
     border-radius: 12px;
     margin-block-end: 20px;
@@ -2115,8 +2115,8 @@ button,
 
 .customer-image-template__image img {
     inline-size: 100%;
-    block-size: 250px;
-    object-fit: cover;
+    block-size: auto;
+    display: block;
 }
 
 /* حقل الصورة يأخذ عرض كامل حتى في الشبكة */
