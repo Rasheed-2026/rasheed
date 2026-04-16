@@ -15,19 +15,24 @@
 <body>
     <!-- ترويسة التطبيق: الاسم + شريط التنقل في صف واحد -->
     <header class="app-header">
-        <h1 class="app-header__title">رشيد</h1>
-        <nav class="nav" aria-label="القائمة الرئيسية">
-            <div class="nav__main-links">
-                <a href="ingredients.html" class="nav-link">المكونات</a>
-                <a href="recipes.html" class="nav-link">الوصفات</a>
-                <a href="pricing-page.html" class="nav-link nav-link--active">التسعير</a>
-                <a href="shopping.html" class="nav-link">قائمة التسوق</a>
-            </div>
-            <div class="nav__help-link">
-                <a href="help.html" class="nav-link">كيف تستخدم؟</a>
-                <button id="logout-btn" class="btn btn--logout">تسجيل الخروج</button>
-            </div>
-        </nav>
+        <a href="index.html" class="app-header__title-link">
+            <h1 class="app-header__title">رشيد</h1>
+        </a>
+        <button class="hamburger-btn" id="hamburger-btn" aria-label="القائمة">☰</button>
+        <div class="nav-menu" id="nav-menu">
+            <nav class="nav" aria-label="القائمة الرئيسية">
+                <div class="nav__main-links">
+                    <a href="ingredients.html" class="nav-link">المكونات</a>
+                    <a href="recipes.html" class="nav-link">الوصفات</a>
+                    <a href="pricing-page.html" class="nav-link nav-link--active">التسعير</a>
+                    <a href="shopping.html" class="nav-link">قائمة التسوق</a>
+                </div>
+                <div class="nav__help-link">
+                    <a href="help.html" class="nav-link">كيف تستخدم؟</a>
+                </div>
+            </nav>
+            <button id="logout-btn" class="btn btn--logout">تسجيل الخروج</button>
+        </div>
     </header>
 
     <main class="container">

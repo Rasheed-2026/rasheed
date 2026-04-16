@@ -32,4 +32,28 @@ document.addEventListener('DOMContentLoaded', () => {
             // onAuthStateChange بيتكفّل بالتحويل
         });
     }
+
+    // قائمة الهامبرغر للجوال: فتح/إغلاق القائمة
+    const hamburgerBtn = document.getElementById('hamburger-btn');
+    const navMenu = document.getElementById('nav-menu');
+
+    if (hamburgerBtn && navMenu) {
+        hamburgerBtn.addEventListener('click', function () {
+            navMenu.classList.toggle('nav-menu--open');
+        });
+
+        // إغلاق القائمة عند الضغط على أي رابط أو زر داخلها
+        navMenu.querySelectorAll('a, button').forEach(function (el) {
+            el.addEventListener('click', function () {
+                navMenu.classList.remove('nav-menu--open');
+            });
+        });
+
+        // إغلاق القائمة عند الضغط خارجها
+        document.addEventListener('click', function (e) {
+            if (!navMenu.contains(e.target) && e.target !== hamburgerBtn) {
+                navMenu.classList.remove('nav-menu--open');
+            }
+        });
+    }
 });
