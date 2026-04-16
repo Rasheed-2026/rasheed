@@ -1975,12 +1975,13 @@ button,
     overflow: hidden;
     border-radius: 8px;
     margin-block-end: 12px;
+    background-color: #f8f8f8;
 }
 
 .recipe-card__image img {
     inline-size: 100%;
     block-size: 100%;
-    object-fit: cover;
+    object-fit: contain;
 }
 
 /* عنصر نائب لو ما فيه صورة — لون هادي مع أيقونة */
