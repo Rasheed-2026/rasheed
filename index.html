@@ -13,10 +13,6 @@
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body class="landing-body">
-  <!-- Supabase CDN + client (needed to check if user is logged in) -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script src="js/supabase-client.js"></script>
-
   <main class="landing">
 
     <!-- Hero section -->
@@ -77,24 +73,5 @@
 
   </main>
 
-  <!-- Script to redirect the CTA buttons to ingredients.html if already logged in -->
-  <script>
-    // التحقق: لو المستخدم مسجل دخول، نحول أزرار "ابدأ الآن" لصفحة المكونات
-    (async function updateCTAs() {
-      try {
-        const { data: { session } } = await window.supabaseClient.auth.getSession();
-        if (session) {
-          // المستخدم مسجل دخول — نوجه الأزرار مباشرة لصفحة المكونات
-          const ctaButtons = document.querySelectorAll('.landing-cta');
-          ctaButtons.forEach(btn => {
-            btn.setAttribute('href', 'ingredients.html');
-            btn.textContent = 'ادخل للبرنامج';
-          });
-        }
-      } catch (error) {
-        console.error('Error checking session:', error);
-      }
-    })();
-  </script>
 </body>
 </html>
