@@ -56,12 +56,12 @@
                 <div class="field">
                     <label for="package-amount">حجم العبوة</label>
                     <input
-                        type="number"
+                        type="text"
+                        inputmode="decimal"
+                        pattern="[0-9.,٠-٩،.]*"
                         id="package-amount"
                         name="package-amount"
                         placeholder="مثال: 5"
-                        min="0"
-                        step="any"
                         required
                     >
                 </div>
@@ -80,12 +80,12 @@
                 <div class="field">
                     <label for="package-price">سعر العبوة (ريال)</label>
                     <input
-                        type="number"
+                        type="text"
+                        inputmode="decimal"
+                        pattern="[0-9.,٠-٩،.]*"
                         id="package-price"
                         name="package-price"
                         placeholder="مثال: 25"
-                        min="0"
-                        step="any"
                         required
                     >
                 </div>

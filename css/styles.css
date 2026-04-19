@@ -1,4 +1,12 @@
-/*
+@font-face {
+  font-family: 'WesternNums';
+  src: local('Arial'), local('Helvetica'), local('sans-serif');
+  unicode-range: U+0030-0039, U+002E, U+002C, U+0025;
+}/*
+
+* { font-family: 'Cairo', sans-serif !important; }
+.force-western { font-family: Arial, Helvetica, sans-serif !important; }
+
   ============================================
   ملف التنسيقات الرئيسي
   ============================================
@@ -66,7 +74,7 @@ select {
     --color-secondary-hover: #1f2937;
     --color-border: #e5e0d5;
     --radius: 10px;
-    --font-arabic: 'Tajawal', system-ui, sans-serif;
+    --font-arabic: 'WesternNums', 'Tajawal', system-ui, sans-serif;
 }
 
 html, body {

@@ -156,10 +156,11 @@ async function renderRecipes() {
         const gp = recipe.gasCylinderPrice ?? defaults.DEFAULT_GAS_CYLINDER_PRICE;
         const pricingLine = document.createElement('div');
         pricingLine.className = 'item-meta item-meta--pricing';
-        pricingLine.textContent =
-            'قيم التسعير: ساعة العمل ' + toWesternNumerals(hr) + ' ريال' +
-            ' — الكهرباء ' + toWesternNumerals(er) + ' هللة' +
-            ' — الغاز ' + toWesternNumerals(gp) + ' ريال';
+        pricingLine.style.fontFeatureSettings = '"locl" off';
+        pricingLine.innerHTML =
+            'قيم التسعير: ساعة العمل <span lang="en">' + toWesternNumerals(hr) + '</span> ريال' +
+            ' — الكهرباء <span lang="en">' + toWesternNumerals(er) + '</span> هللة' +
+            ' — الغاز <span lang="en">' + toWesternNumerals(gp) + '</span> ريال';
 
         info.appendChild(name);
 

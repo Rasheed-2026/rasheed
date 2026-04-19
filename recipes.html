@@ -8,7 +8,7 @@
     <!-- خط عربي من Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;700;900&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="css/styles.css">
 </head>
@@ -72,12 +72,12 @@
                 <div class="field">
                     <label for="recipe-servings">عدد الحصص</label>
                     <input
-                        type="number"
+                        type="text"
+                        inputmode="decimal"
+                        pattern="[0-9.,٠-٩،.]*"
                         id="recipe-servings"
                         name="recipe-servings"
                         placeholder="مثال: 12"
-                        min="1"
-                        step="1"
                         required
                     >
                 </div>
@@ -85,12 +85,12 @@
                 <div class="field">
                     <label for="recipe-prep-time">وقت التحضير (بالدقائق)</label>
                     <input
-                        type="number"
+                        type="text"
+                        inputmode="decimal"
+                        pattern="[0-9.,٠-٩،.]*"
                         id="recipe-prep-time"
                         name="recipe-prep-time"
                         placeholder="مثال: 20"
-                        min="0"
-                        step="1"
                         required
                     >
                 </div>
@@ -98,12 +98,12 @@
                 <div class="field">
                     <label for="recipe-cook-time">وقت الطبخ (بالدقائق)</label>
                     <input
-                        type="number"
+                        type="text"
+                        inputmode="decimal"
+                        pattern="[0-9.,٠-٩،.]*"
                         id="recipe-cook-time"
                         name="recipe-cook-time"
                         placeholder="مثال: 40"
-                        min="0"
-                        step="1"
                         required
                     >
                 </div>
@@ -127,11 +127,11 @@
                         <div class="field">
                             <label for="recipe-packaging-cost">تغليف (ريال)</label>
                             <input
-                                type="number"
+                                type="text"
+                                inputmode="decimal"
+                                pattern="[0-9.,٠-٩،.]*"
                                 id="recipe-packaging-cost"
                                 name="recipe-packaging-cost"
-                                min="0"
-                                step="any"
                                 required
                             >
                         </div>
@@ -139,11 +139,11 @@
                         <div class="field">
                             <label for="recipe-delivery-cost">توصيل (ريال)</label>
                             <input
-                                type="number"
+                                type="text"
+                                inputmode="decimal"
+                                pattern="[0-9.,٠-٩،.]*"
                                 id="recipe-delivery-cost"
                                 name="recipe-delivery-cost"
-                                min="0"
-                                step="any"
                                 required
                             >
                         </div>
@@ -151,11 +151,11 @@
                         <div class="field">
                             <label for="recipe-other-cost">تكاليف أخرى (ريال)</label>
                             <input
-                                type="number"
+                                type="text"
+                                inputmode="decimal"
+                                pattern="[0-9.,٠-٩،.]*"
                                 id="recipe-other-cost"
                                 name="recipe-other-cost"
-                                min="0"
-                                step="any"
                                 required
                             >
                         </div>
@@ -171,11 +171,11 @@
                         <div class="field">
                             <label for="recipe-hourly-rate">قيمة ساعة العمل (ريال)</label>
                             <input
-                                type="number"
+                                type="text"
+                                inputmode="decimal"
+                                pattern="[0-9.,٠-٩،.]*"
                                 id="recipe-hourly-rate"
                                 name="recipe-hourly-rate"
-                                min="0"
-                                step="any"
                                 required
                             >
                         </div>
@@ -183,11 +183,11 @@
                         <div class="field">
                             <label for="recipe-electricity-rate">تعرفة الكهرباء (هللة/ك.و.س)</label>
                             <input
-                                type="number"
+                                type="text"
+                                inputmode="decimal"
+                                pattern="[0-9.,٠-٩،.]*"
                                 id="recipe-electricity-rate"
                                 name="recipe-electricity-rate"
-                                min="0"
-                                step="any"
                                 required
                             >
                         </div>
@@ -195,11 +195,11 @@
                         <div class="field">
                             <label for="recipe-gas-price">سعر أسطوانة الغاز (ريال)</label>
                             <input
-                                type="number"
+                                type="text"
+                                inputmode="decimal"
+                                pattern="[0-9.,٠-٩،.]*"
                                 id="recipe-gas-price"
                                 name="recipe-gas-price"
-                                min="0"
-                                step="any"
                                 required
                             >
                         </div>

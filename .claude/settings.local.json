@@ -15,7 +15,9 @@
       "Bash(ls *.html)",
       "Bash(node -c js/shopping-lists.js)",
       "Bash(node -c js/shopping-aggregator.js)",
-      "Bash(node -c js/shopping-main.js)"
+      "Bash(node -c js/shopping-main.js)",
+      "Bash(grep *)",
+      "Bash(echo \"EXIT: $?\")"
     ]
   }
 }

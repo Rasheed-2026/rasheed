@@ -62,12 +62,12 @@
                 <div class="field" id="custom-margin-field" hidden>
                     <label for="custom-margin">النسبة المخصصة</label>
                     <input
-                        type="number"
+                        type="text"
+                        inputmode="decimal"
+                        pattern="[0-9.,٠-٩،.]*"
                         id="custom-margin"
                         name="custom-margin"
                         placeholder="النسبة %"
-                        min="0"
-                        step="1"
                     >
                     <p class="field-hint">أدخل النسبة المئوية للربح (مثال: 35)</p>
                 </div>
