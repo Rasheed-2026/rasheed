@@ -78,6 +78,19 @@
         ordersList = document.getElementById('orders-list');
         generateShoppingBtn = document.getElementById('generate-shopping-from-orders');
 
+        // تنظيف إدخال رقم الجوال: تحويل الأرقام العربية إلى إنجليزية وقصر الطول على ١٠
+        const phoneInput = document.getElementById('customer-phone');
+        if (phoneInput) {
+            phoneInput.addEventListener('input', function () {
+                let cleaned = this.value;
+                const arabicIndic = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+                arabicIndic.forEach((d, i) => {
+                    cleaned = cleaned.split(d).join(String(i));
+                });
+                this.value = cleaned.replace(/[^\d]/g, '').slice(0, 10);
+            });
+        }
+
         // مؤشر تحميل
         ordersList.innerHTML = '<p class="loading-message">جاري التحميل...</p>';
 
@@ -253,6 +266,11 @@
         }
         if (!phone) {
             alert('اكتب رقم الجوال');
+            customerPhoneInput.focus();
+            return;
+        }
+        if (!/^05\d{8}$/.test(phone)) {
+            alert('رقم الجوال لازم يكون ١٠ أرقام ويبدأ بـ 05.');
             customerPhoneInput.focus();
             return;
         }

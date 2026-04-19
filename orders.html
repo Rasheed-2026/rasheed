@@ -61,7 +61,7 @@
                     </div>
                     <div class="field">
                         <label for="customer-phone">رقم الجوال</label>
-                        <input type="tel" id="customer-phone" required placeholder="05XXXXXXXX" dir="ltr">
+                        <input type="tel" inputmode="numeric" pattern="05[0-9]{8}" maxlength="10" minlength="10" placeholder="05XXXXXXXX" id="customer-phone" required dir="ltr">
                     </div>
                 </div>
                 <div class="field">
@@ -78,7 +78,7 @@
             <div class="form-row">
                 <div class="field">
                     <label for="delivery-date">تاريخ التسليم</label>
-                    <input type="date" id="delivery-date" required>
+                    <input type="date" lang="en" id="delivery-date" required>
                 </div>
                 <div class="field">
                     <label for="delivery-method">طريقة التسليم</label>
