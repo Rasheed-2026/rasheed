@@ -91,6 +91,22 @@
             });
         }
 
+        // ============================================
+        // Flatpickr: منتقي تاريخ عربي بأرقام لاتينية
+        // القيمة المخزنة في الحقل الأصلي تبقى ISO (YYYY-MM-DD) للتوافق مع قاعدة البيانات
+        // ============================================
+        if (deliveryDateInput && typeof flatpickr !== 'undefined') {
+            flatpickr(deliveryDateInput, {
+                locale: 'ar',
+                dateFormat: 'Y-m-d',
+                altInput: true,
+                altFormat: 'j F Y',
+                disableMobile: true,
+                minDate: 'today',
+                position: 'auto'
+            });
+        }
+
         // مؤشر تحميل
         ordersList.innerHTML = '<p class="loading-message">جاري التحميل...</p>';
 
@@ -112,7 +128,11 @@
         // تعيين تاريخ التسليم الافتراضي = بكرة
         var tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
-        deliveryDateInput.value = formatDateForInput(tomorrow);
+        if (deliveryDateInput._flatpickr) {
+            deliveryDateInput._flatpickr.setDate(tomorrow, false);
+        } else {
+            deliveryDateInput.value = formatDateForInput(tomorrow);
+        }
 
         // تحميل الطلبات
         await loadAndRenderOrders();
@@ -443,7 +463,11 @@
         // إعادة تعيين التاريخ لبكرة
         var tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
-        deliveryDateInput.value = formatDateForInput(tomorrow);
+        if (deliveryDateInput._flatpickr) {
+            deliveryDateInput._flatpickr.setDate(tomorrow, false);
+        } else {
+            deliveryDateInput.value = formatDateForInput(tomorrow);
+        }
 
         saveOrderBtn.textContent = 'حفظ الطلب';
     }
