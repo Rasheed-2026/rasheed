@@ -1431,6 +1431,39 @@ button,
     }
 }
 
+/* === تخطيط الترويسة على الديسكتوب: العنوان يمين، الروابط وسط، الخروج يسار === */
+@media (min-width: 769px) {
+    /* شبكة بثلاثة أعمدة: العمود الأوسط auto ليتمركز بصرياً بغض النظر عن عرض الطرفين */
+    .app-header {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+    }
+
+    /* العنوان في العمود الأول (اليمين في RTL) */
+    .app-header__title-link {
+        justify-self: start;
+    }
+
+    /* فك غلاف nav-menu حتى يصبح nav و logout-btn عنصرين مستقلين في الشبكة */
+    .nav-menu {
+        display: contents;
+    }
+
+    /* إلغاء display: contents عن nav في الديسكتوب حتى تكون عنصر شبكة حقيقي */
+    .nav-menu .nav {
+        display: block;
+        grid-column: 2;
+        justify-self: center;
+    }
+
+    /* زر الخروج في العمود الثالث (اليسار في RTL) */
+    #logout-btn {
+        grid-column: 3;
+        justify-self: end;
+    }
+}
+
 /* === سهم الانتقال للصفحة التالية === */
 .next-page-arrow {
     margin-block-start: 3rem;
