@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ar-u-nu-latn" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حسابي — رشيد</title>
+
+    <!-- خط عربي من Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- ترويسة التطبيق: الاسم + شريط التنقل في صف واحد -->
+    <header class="app-header">
+        <a href="index.html" class="app-header__title-link">
+            <h1 class="app-header__title">رشيد</h1>
+        </a>
+        <button class="hamburger-btn" id="hamburger-btn" aria-label="القائمة">☰</button>
+        <div class="nav-menu" id="nav-menu">
+            <nav class="nav" aria-label="القائمة الرئيسية">
+                <div class="nav__main-links">
+                    <a href="ingredients.html" class="nav-link">المكونات</a>
+                    <a href="recipes.html" class="nav-link">الوصفات</a>
+                    <a href="pricing-page.html" class="nav-link">التسعير</a>
+                    <a href="shopping.html" class="nav-link">قائمة التسوق</a>
+                    <a href="orders.html" class="nav-link">الطلبات</a>
+                </div>
+            </nav>
+            <button id="logout-btn" class="btn btn--logout">تسجيل الخروج</button>
+        </div>
+    </header>
+
+    <main class="container">
+        <h1>حسابي</h1>
+        <p class="intro">معلومات متجرك — تظهر لاحقاً في صورة العميل والفاتورة.</p>
+
+        <!-- نموذج بيانات المتجر -->
+        <section class="card form-section" aria-labelledby="account-form-title">
+            <h2 id="account-form-title">بيانات المتجر</h2>
+
+            <form id="account-form" novalidate>
+                <!-- البريد الإلكتروني (للعرض فقط) -->
+                <div class="field">
+                    <label>البريد الإلكتروني</label>
+                    <span class="readonly-value" id="account-email">جاري التحميل...</span>
+                    <p class="field-hint">لا يمكن تعديل البريد من هنا.</p>
+                </div>
+
+                <!-- اسم المتجر -->
+                <div class="field">
+                    <label for="store-name">اسم المتجر</label>
+                    <input type="text" id="store-name" maxlength="50" placeholder="مثال: مطبخ أم خالد">
+                    <p class="field-hint">سيظهر في صورة العميل التي ترسلينها عبر واتساب.</p>
+                </div>
+
+                <!-- رقم جوال المتجر -->
+                <div class="field">
+                    <label for="store-phone">رقم جوال المتجر</label>
+                    <input type="tel" inputmode="numeric" pattern="05[0-9]{8}"
+                           maxlength="10" id="store-phone" placeholder="05XXXXXXXX" dir="ltr">
+                    <p class="field-hint">لازم يبدأ بـ 05 ويكون 10 أرقام.</p>
+                </div>
+
+                <!-- لوجو المتجر (اختياري) -->
+                <div class="field field--full">
+                    <label for="account-logo">لوجو المتجر (اختياري)</label>
+                    <div class="image-upload">
+                        <input type="file" id="account-logo" accept="image/jpeg,image/png,image/webp" class="image-upload__input">
+                        <label for="account-logo" class="image-upload__label" id="account-logo-label">
+                            <span class="image-upload__icon">🏷️</span>
+                            <span class="image-upload__text">اختر لوجو</span>
+                        </label>
+                        <div class="image-upload__preview account-logo-preview" id="account-logo-preview" hidden>
+                            <img src="" alt="معاينة اللوجو" id="account-logo-preview-img">
+                            <button type="button" class="image-upload__remove" id="account-logo-remove" aria-label="إزالة اللوجو">×</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" id="account-submit-btn" class="btn btn-primary">حفظ التغييرات</button>
+                    <span class="account-feedback" id="account-feedback" aria-live="polite"></span>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <footer class="app-footer">
+        <a href="help.html" class="app-footer__link">كيف تستخدم؟</a>
+        <span class="app-footer__separator">|</span>
+        <span class="app-footer__copyright">© رشيد ٢٠٢٦</span>
+    </footer>
+
+    <!-- Supabase أولاً: المكتبة، ثم تهيئة العميل، ثم حارس الصفحة -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/auth-guard.js"></script>
+    <script src="js/image-utils.js"></script>
+    <script src="js/account.js"></script>
+    <script src="js/account-main.js"></script>
+</body>
+</html>
