@@ -25,6 +25,8 @@
             customerId: row.customer_id,
             deliveryMethod: row.delivery_method,
             deliveryDate: row.delivery_date,
+            deliveryDistrict: row.delivery_district || null,
+            deliveryCost: row.delivery_cost != null ? Number(row.delivery_cost) : null,
             status: row.status,
             notes: row.notes || null,
             totalPrice: Number(row.total_price || 0),
@@ -184,6 +186,44 @@
         return dbToOrder(result.data);
     }
 
+    // ===== تحديث بيانات الفاتورة (الحي وتكلفة التوصيل) =====
+    // تُستدعى من نافذة تصدير الفاتورة. تحفظ الحي والتكلفة في الطلب
+    // بحيث تظهر تلقائياً في المرة القادمة لنفس الطلب.
+    // district و cost اختياريان — null مقبول.
+    async function updateInvoiceData(id, district, cost) {
+        if (!id) throw new Error('رقم الطلب مطلوب');
+
+        // تنظيف القيم: فارغ أو مسافات فقط → null
+        var cleanedDistrict = null;
+        if (district !== null && district !== undefined) {
+            var trimmed = String(district).trim();
+            cleanedDistrict = trimmed === '' ? null : trimmed;
+        }
+
+        var cleanedCost = null;
+        if (cost !== null && cost !== undefined && cost !== '') {
+            var num = Number(cost);
+            if (!isNaN(num) && num >= 0) {
+                cleanedCost = num;
+            }
+        }
+
+        var result = await window.supabaseClient
+            .from('orders')
+            .update({
+                delivery_district: cleanedDistrict,
+                delivery_cost: cleanedCost
+            })
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (result.error) {
+            throw new Error('حصل خطأ أثناء حفظ بيانات الفاتورة: ' + result.error.message);
+        }
+        return dbToOrder(result.data);
+    }
+
     // ===== تعديل طلب كامل (بياناته وعناصره) =====
     async function updateOrder(id, customerId, deliveryMethod, deliveryDate, notes, items) {
         // حساب المجموع الجديد
@@ -269,6 +309,7 @@
         getOrderById: getOrderById,
         addOrder: addOrder,
         updateOrderStatus: updateOrderStatus,
+        updateInvoiceData: updateInvoiceData,
         updateOrder: updateOrder,
         deleteOrder: deleteOrder,
         getOrdersByStatus: getOrdersByStatus,
