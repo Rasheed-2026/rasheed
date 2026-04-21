@@ -2584,7 +2584,7 @@ button,
 /* إخفاء القائمة المنسدلة على الجوال */
 @media (max-width: 768px) {
     .account-dropdown {
-        display: none;
+        display: none !important;
     }
 }
 
