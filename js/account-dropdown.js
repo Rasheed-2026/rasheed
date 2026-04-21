@@ -53,5 +53,18 @@
                 closeMenu();
             }
         });
+
+        // الزر الوسيط داخل القائمة المنسدلة: يعيد توجيه النقر للزر الحقيقي #logout-btn
+        // هذا يحافظ على منطق الخروج في auth.js بدون تكرار.
+        var proxyLogout = menu.querySelector('[data-action="logout-proxy"]');
+        if (proxyLogout) {
+            proxyLogout.addEventListener('click', function () {
+                closeMenu();
+                var realLogout = document.getElementById('logout-btn');
+                if (realLogout) {
+                    realLogout.click();
+                }
+            });
+        }
     });
 })();

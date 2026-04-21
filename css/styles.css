@@ -2664,3 +2664,21 @@ button,
     color: #c0392b;
     border-top: 1px solid var(--color-border);
 }
+
+/* ============================================
+   إظهار زر تسجيل الخروج الحقيقي حسب المقاس
+   ============================================ */
+
+/* على الديسكتوب: إخفاء #logout-btn الحقيقي — الخروج يتم عبر الزر الوسيط في القائمة المنسدلة */
+@media (min-width: 769px) {
+    .nav-menu__logout-mobile {
+        display: none;
+    }
+}
+
+/* على الجوال: إظهار #logout-btn طبيعياً داخل القائمة المفتوحة */
+@media (max-width: 768px) {
+    .nav-menu__logout-mobile {
+        display: block;
+    }
+}
