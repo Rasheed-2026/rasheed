@@ -53,6 +53,12 @@
     // ===== الفلتر الحالي =====
     var currentFilter = 'active';
 
+    // ===== متغيرات حالة الفاتورة =====
+    // نخزّن الطلب والبروفايل والجوال بين فتح النافذة والتصدير
+    var currentInvoiceOrder = null;
+    var currentInvoiceCustomerPhone = null;
+    var currentInvoiceProfile = null;
+
     document.addEventListener('DOMContentLoaded', async function () {
         // جلب مراجع العناصر
         customerSelect = document.getElementById('customer-select');
@@ -139,6 +145,24 @@
 
         // ربط الأحداث
         wireEvents();
+
+        // ربط أحداث نافذة الفاتورة
+        var invoiceModal = document.getElementById('invoice-modal');
+        if (invoiceModal) {
+            var invoiceCancel = document.getElementById('invoice-cancel');
+            var invoiceExport = document.getElementById('invoice-export');
+            var invoiceBackdrop = invoiceModal.querySelector('.modal__backdrop');
+
+            invoiceCancel.addEventListener('click', closeInvoiceModal);
+            invoiceBackdrop.addEventListener('click', closeInvoiceModal);
+            invoiceExport.addEventListener('click', exportInvoice);
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && !invoiceModal.hidden) {
+                    closeInvoiceModal();
+                }
+            });
+        }
     });
 
     // ===== تعبئة قائمة العملاء =====
@@ -535,6 +559,8 @@
                 '</div>' +
                 '<div class="order-card__actions">' +
                     nextStatusHtml +
+                    '<button class="btn btn-secondary order-card__invoice-btn btn--small" data-action="invoice" data-order-id="' +
+                    order.id + '">فاتورة</button>' +
                     '<button class="btn btn--danger btn--small" data-action="delete-order" data-id="' +
                     order.id + '">حذف</button>' +
                 '</div>';
@@ -545,6 +571,14 @@
 
     // ===== التعامل مع أحداث قائمة الطلبات =====
     async function handleOrdersListClick(e) {
+        // فتح نافذة الفاتورة
+        var invoiceBtn = e.target.closest('[data-action="invoice"]');
+        if (invoiceBtn) {
+            var invoiceOrderId = invoiceBtn.dataset.orderId;
+            await openInvoiceModal(invoiceOrderId);
+            return;
+        }
+
         // تغيير الحالة
         var statusBtn = e.target.closest('[data-action="change-status"]');
         if (statusBtn) {
@@ -628,6 +662,319 @@
             generateShoppingBtn.disabled = false;
             generateShoppingBtn.textContent = '🛒 أنشئ قائمة تسوق من الطلبات الحالية';
         }
+    }
+
+    // ===== فتح نافذة الفاتورة =====
+    // نجلب الطلب وبيانات المتجر، ثم نعبّي الحقول ونعرض النافذة
+    async function openInvoiceModal(orderId) {
+        var order = await window.tasceerOrders.getOrderById(orderId);
+        if (!order) {
+            alert('الطلب غير موجود.');
+            return;
+        }
+
+        // جلب بيانات المتجر (مع fallback لو غير متوفرة)
+        var profile = { storeName: null, storeLogoUrl: null, storePhone: null };
+        try {
+            if (window.tasceerAccount) {
+                profile = await window.tasceerAccount.getProfile();
+            }
+        } catch (err) {
+            console.warn('تعذر جلب بيانات المتجر:', err);
+        }
+
+        // تعبئة قسم معلومات المتجر في النافذة
+        var hasStoreData = false;
+        var storeNameWrap = document.getElementById('invoice-store-name-wrap');
+        var storeLogoWrap = document.getElementById('invoice-store-logo-wrap');
+        var storePhoneWrap = document.getElementById('invoice-store-phone-wrap');
+        var storeEmpty = document.getElementById('invoice-store-empty');
+        var storeHint = document.getElementById('invoice-store-hint');
+
+        if (profile.storeName) {
+            document.getElementById('invoice-store-name-display').textContent = profile.storeName;
+            storeNameWrap.hidden = false;
+            document.getElementById('invoice-show-store-name').checked = true;
+            hasStoreData = true;
+        } else {
+            storeNameWrap.hidden = true;
+        }
+
+        if (profile.storeLogoUrl) {
+            storeLogoWrap.hidden = false;
+            document.getElementById('invoice-show-store-logo').checked = true;
+            hasStoreData = true;
+        } else {
+            storeLogoWrap.hidden = true;
+        }
+
+        if (profile.storePhone) {
+            document.getElementById('invoice-store-phone-display').textContent = profile.storePhone;
+            storePhoneWrap.hidden = false;
+            document.getElementById('invoice-show-store-phone').checked = true;
+            hasStoreData = true;
+        } else {
+            storePhoneWrap.hidden = true;
+        }
+
+        storeEmpty.hidden = hasStoreData;
+        storeHint.hidden = !hasStoreData;
+
+        // معلومات العميل
+        document.getElementById('invoice-customer-name').textContent = order.customerName || '—';
+
+        // جلب جوال العميل من customers.js (fallback: '—')
+        var customerPhone = '—';
+        try {
+            if (window.tasceerCustomers && window.tasceerCustomers.getCustomerById) {
+                var customer = await window.tasceerCustomers.getCustomerById(order.customerId);
+                if (customer && customer.phone) {
+                    customerPhone = customer.phone;
+                }
+            }
+        } catch (err) {
+            console.warn('تعذر جلب بيانات العميل:', err);
+        }
+        document.getElementById('invoice-customer-phone').textContent = customerPhone;
+
+        var deliveryMethodLabel = order.deliveryMethod === 'delivery' ? 'توصيل' : 'استلام';
+        document.getElementById('invoice-delivery-method').textContent = deliveryMethodLabel;
+
+        // حقول التوصيل (للتوصيل فقط — تأخذ قيم محفوظة لو موجودة)
+        var deliveryFields = document.getElementById('invoice-delivery-fields');
+        var districtInput = document.getElementById('invoice-district');
+        var deliveryCostInput = document.getElementById('invoice-delivery-cost');
+
+        if (order.deliveryMethod === 'delivery') {
+            deliveryFields.hidden = false;
+            districtInput.value = order.deliveryDistrict || '';
+            deliveryCostInput.value = order.deliveryCost != null ? String(order.deliveryCost) : '';
+        } else {
+            deliveryFields.hidden = true;
+            districtInput.value = '';
+            deliveryCostInput.value = '';
+        }
+
+        // رسالة الشكر (نرجعها للقيمة الافتراضية كل مرة)
+        document.getElementById('invoice-thank-you').value = 'شكراً لطلبك';
+
+        // نحفظ الطلب والبروفايل لاستخدامهما عند التصدير
+        currentInvoiceOrder = order;
+        currentInvoiceCustomerPhone = customerPhone;
+        currentInvoiceProfile = profile;
+
+        // فتح النافذة
+        document.getElementById('invoice-modal').hidden = false;
+    }
+
+    // ===== تصدير الفاتورة كصورة PNG =====
+    async function exportInvoice() {
+        if (!currentInvoiceOrder) return;
+        if (typeof html2canvas !== 'function') {
+            alert('مكتبة إنشاء الصورة لم تُحمّل. تحقق من اتصالك بالإنترنت.');
+            return;
+        }
+
+        var exportBtn = document.getElementById('invoice-export');
+        var originalText = exportBtn.textContent;
+        exportBtn.disabled = true;
+        exportBtn.textContent = 'جاري الإنشاء...';
+
+        try {
+            var order = currentInvoiceOrder;
+            var profile = currentInvoiceProfile;
+
+            // قراءة القيم من النافذة
+            var showStoreName = document.getElementById('invoice-show-store-name').checked;
+            var showStoreLogo = document.getElementById('invoice-show-store-logo').checked;
+            var showStorePhone = document.getElementById('invoice-show-store-phone').checked;
+            var district = document.getElementById('invoice-district').value.trim();
+            var deliveryCostRaw = document.getElementById('invoice-delivery-cost').value.trim();
+            var thankYouMessage = document.getElementById('invoice-thank-you').value.trim() || 'شكراً لطلبك';
+
+            var deliveryCost = 0;
+            if (deliveryCostRaw !== '') {
+                var parsed = parseFloat(normalizeNumericInput(deliveryCostRaw));
+                if (!isNaN(parsed) && parsed >= 0) {
+                    deliveryCost = parsed;
+                }
+            }
+
+            // حفظ الحي والتكلفة في الطلب (لو توصيل) — عشان تظهر في المرة القادمة
+            if (order.deliveryMethod === 'delivery') {
+                try {
+                    await window.tasceerOrders.updateInvoiceData(
+                        order.id,
+                        district || null,
+                        deliveryCost > 0 ? deliveryCost : null
+                    );
+                } catch (err) {
+                    console.warn('تعذر حفظ بيانات الفاتورة:', err);
+                    // لا نوقف التصدير — بس نسجل الخطأ
+                }
+            }
+
+            // === تعبئة قالب الفاتورة ===
+            var template = document.getElementById('invoice-template');
+
+            // الهيدر
+            var header = document.getElementById('invoice-template-header');
+            var logoImg = document.getElementById('invoice-template-logo');
+            var storeNameEl = document.getElementById('invoice-template-store-name');
+            var storePhoneEl = document.getElementById('invoice-template-store-phone');
+
+            var showHeader = false;
+
+            if (showStoreLogo && profile.storeLogoUrl) {
+                logoImg.src = profile.storeLogoUrl;
+                logoImg.hidden = false;
+                showHeader = true;
+            } else {
+                logoImg.hidden = true;
+            }
+
+            if (showStoreName && profile.storeName) {
+                storeNameEl.textContent = profile.storeName;
+                storeNameEl.hidden = false;
+                showHeader = true;
+            } else {
+                storeNameEl.hidden = true;
+                storeNameEl.textContent = '';
+            }
+
+            if (showStorePhone && profile.storePhone) {
+                storePhoneEl.textContent = profile.storePhone;
+                storePhoneEl.hidden = false;
+                showHeader = true;
+            } else {
+                storePhoneEl.hidden = true;
+                storePhoneEl.textContent = '';
+            }
+
+            header.hidden = !showHeader;
+
+            // رقم الفاتورة + التاريخ
+            var invNumber = 'INV-' + String(order.id).padStart(4, '0');
+            document.getElementById('invoice-template-number').textContent = invNumber;
+
+            var orderDate = order.deliveryDate || order.createdAt;
+            var dateDisplay = '';
+            if (orderDate) {
+                try {
+                    var d = new Date(orderDate);
+                    var day = String(d.getDate()).padStart(2, '0');
+                    var month = String(d.getMonth() + 1).padStart(2, '0');
+                    var year = d.getFullYear();
+                    dateDisplay = day + '/' + month + '/' + year;
+                } catch (e) {
+                    dateDisplay = String(orderDate);
+                }
+            }
+            document.getElementById('invoice-template-date').textContent = 'التاريخ: ' + dateDisplay;
+
+            // بيانات العميل
+            document.getElementById('invoice-template-customer-name').textContent = order.customerName || '—';
+            document.getElementById('invoice-template-customer-phone').textContent = currentInvoiceCustomerPhone || '—';
+            document.getElementById('invoice-template-delivery-method').textContent =
+                order.deliveryMethod === 'delivery' ? 'توصيل' : 'استلام';
+
+            var districtLine = document.getElementById('invoice-template-district-line');
+            if (order.deliveryMethod === 'delivery' && district) {
+                document.getElementById('invoice-template-district').textContent = district;
+                districtLine.hidden = false;
+            } else {
+                districtLine.hidden = true;
+            }
+
+            // جدول الأصناف
+            var tbody = document.getElementById('invoice-template-items-body');
+            tbody.innerHTML = '';
+            var items = order.items || [];
+            var subtotal = 0;
+            items.forEach(function (item) {
+                var tr = document.createElement('tr');
+                tr.innerHTML =
+                    '<td>' + item.recipeName + '</td>' +
+                    '<td>' + toWesternNumerals(String(item.quantity)) + '</td>' +
+                    '<td>' + toWesternNumerals(item.unitPrice.toFixed(2)) + ' ريال</td>' +
+                    '<td>' + toWesternNumerals(item.subtotal.toFixed(2)) + ' ريال</td>';
+                tbody.appendChild(tr);
+                subtotal += item.subtotal;
+            });
+
+            // الإجماليات
+            var subtotalRow = document.getElementById('invoice-template-subtotal-row');
+            var deliveryRow = document.getElementById('invoice-template-delivery-row');
+
+            if (deliveryCost > 0) {
+                document.getElementById('invoice-template-subtotal').textContent =
+                    toWesternNumerals(subtotal.toFixed(2)) + ' ريال';
+                document.getElementById('invoice-template-delivery-cost').textContent =
+                    toWesternNumerals(deliveryCost.toFixed(2)) + ' ريال';
+                subtotalRow.hidden = false;
+                deliveryRow.hidden = false;
+            } else {
+                subtotalRow.hidden = true;
+                deliveryRow.hidden = true;
+            }
+
+            var grandTotal = Math.round((subtotal + deliveryCost) * 100) / 100;
+            document.getElementById('invoice-template-grand-total').textContent =
+                toWesternNumerals(grandTotal.toFixed(2)) + ' ريال';
+
+            // رسالة الشكر
+            document.getElementById('invoice-template-thank-you').textContent = thankYouMessage;
+
+            // التصدير إلى PNG: نظهر القالب خارج الشاشة مؤقتاً
+            template.style.position = 'fixed';
+            template.style.left = '-9999px';
+            template.style.top = '0';
+            template.style.display = 'block';
+
+            var canvas = await html2canvas(template, {
+                backgroundColor: '#ffffff',
+                scale: 2,
+                useCORS: true,
+                allowTaint: false
+            });
+
+            // إرجاع القالب لحالته المخفية
+            template.style.position = '';
+            template.style.left = '';
+            template.style.top = '';
+            template.style.display = '';
+
+            canvas.toBlob(function (blob) {
+                if (!blob) {
+                    alert('حصل خطأ أثناء إنشاء الفاتورة.');
+                    return;
+                }
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = 'فاتورة-' + invNumber + '.png';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+
+                // إغلاق النافذة بعد التصدير
+                closeInvoiceModal();
+            }, 'image/png');
+
+        } catch (err) {
+            console.error('exportInvoice error:', err);
+            alert('حصل خطأ أثناء تصدير الفاتورة. حاولي مرة أخرى.');
+        } finally {
+            exportBtn.disabled = false;
+            exportBtn.textContent = originalText;
+        }
+    }
+
+    // ===== إغلاق نافذة الفاتورة =====
+    function closeInvoiceModal() {
+        document.getElementById('invoice-modal').hidden = true;
+        currentInvoiceOrder = null;
     }
 
     // ===== مساعد: حماية النص من HTML =====

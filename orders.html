@@ -16,6 +16,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <!-- فرض أرقام لاتينية داخل تقويم Flatpickr فقط -->
     <style>
@@ -187,5 +188,132 @@
     <script src="js/customers.js"></script>
     <script src="js/orders.js"></script>
     <script src="js/orders-main.js"></script>
+
+    <!-- نافذة تصدير الفاتورة -->
+    <div class="modal" id="invoice-modal" hidden>
+        <div class="modal__backdrop"></div>
+        <div class="modal__content invoice-modal__content">
+            <h3 class="modal__title">فاتورة الطلب</h3>
+
+            <!-- معلومات المتجر -->
+            <div class="invoice-modal__section">
+                <h4 class="invoice-modal__section-title">معلومات المتجر</h4>
+                <p class="invoice-modal__hint" id="invoice-store-hint">اختاري ما يظهر في الفاتورة:</p>
+
+                <label class="invoice-checkbox" id="invoice-store-name-wrap" hidden>
+                    <input type="checkbox" id="invoice-show-store-name" checked>
+                    <span>اسم المتجر: <strong id="invoice-store-name-display"></strong></span>
+                </label>
+
+                <label class="invoice-checkbox" id="invoice-store-logo-wrap" hidden>
+                    <input type="checkbox" id="invoice-show-store-logo" checked>
+                    <span>اللوجو</span>
+                </label>
+
+                <label class="invoice-checkbox" id="invoice-store-phone-wrap" hidden>
+                    <input type="checkbox" id="invoice-show-store-phone" checked>
+                    <span>الجوال: <strong id="invoice-store-phone-display"></strong></span>
+                </label>
+
+                <p class="invoice-modal__empty" id="invoice-store-empty" hidden>
+                    لا توجد بيانات متجر محفوظة. <a href="account.html">أضيفيها من صفحة حسابي</a>.
+                </p>
+            </div>
+
+            <!-- معلومات العميل (للعرض فقط) -->
+            <div class="invoice-modal__section">
+                <h4 class="invoice-modal__section-title">معلومات العميل</h4>
+                <div class="invoice-modal__readonly">
+                    <div>العميل: <strong id="invoice-customer-name"></strong></div>
+                    <div>الجوال: <strong id="invoice-customer-phone"></strong></div>
+                    <div>طريقة التسليم: <strong id="invoice-delivery-method"></strong></div>
+                </div>
+            </div>
+
+            <!-- الحي وتكلفة التوصيل (للتوصيل فقط) -->
+            <div class="invoice-modal__section" id="invoice-delivery-fields" hidden>
+                <h4 class="invoice-modal__section-title">تفاصيل التوصيل</h4>
+                <div class="field">
+                    <label for="invoice-district">الحي</label>
+                    <input type="text" id="invoice-district" placeholder="مثال: حي الروضة">
+                </div>
+                <div class="field">
+                    <label for="invoice-delivery-cost">تكلفة التوصيل (ريال)</label>
+                    <input type="text" inputmode="decimal" id="invoice-delivery-cost" placeholder="مثال: 20">
+                </div>
+            </div>
+
+            <!-- رسالة الشكر -->
+            <div class="invoice-modal__section">
+                <h4 class="invoice-modal__section-title">رسالة الشكر</h4>
+                <textarea id="invoice-thank-you" rows="2" maxlength="100">شكراً لطلبك</textarea>
+            </div>
+
+            <div class="modal__actions">
+                <button type="button" id="invoice-cancel" class="btn btn-secondary">إلغاء</button>
+                <button type="button" id="invoice-export" class="btn btn-primary">صدّر الفاتورة</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- قالب الفاتورة المخفي (للتصدير فقط) -->
+    <div id="invoice-template" class="invoice-template" aria-hidden="true">
+        <!-- الهيدر: هوية المتجر -->
+        <div class="invoice-template__header" id="invoice-template-header" hidden>
+            <img class="invoice-template__logo" id="invoice-template-logo" src="" alt="" hidden>
+            <div class="invoice-template__store-info">
+                <div class="invoice-template__store-name" id="invoice-template-store-name"></div>
+                <div class="invoice-template__store-phone" id="invoice-template-store-phone"></div>
+            </div>
+        </div>
+
+        <!-- عنوان الفاتورة -->
+        <div class="invoice-template__title-row">
+            <div class="invoice-template__title">فاتورة</div>
+            <div class="invoice-template__number" id="invoice-template-number"></div>
+        </div>
+
+        <div class="invoice-template__date" id="invoice-template-date"></div>
+
+        <!-- معلومات العميل -->
+        <div class="invoice-template__customer">
+            <div><strong>العميل:</strong> <span id="invoice-template-customer-name"></span></div>
+            <div><strong>الجوال:</strong> <span id="invoice-template-customer-phone"></span></div>
+            <div id="invoice-template-delivery-line"><strong>طريقة التسليم:</strong> <span id="invoice-template-delivery-method"></span></div>
+            <div id="invoice-template-district-line" hidden><strong>الحي:</strong> <span id="invoice-template-district"></span></div>
+        </div>
+
+        <!-- جدول الأصناف -->
+        <table class="invoice-template__items">
+            <thead>
+                <tr>
+                    <th>الصنف</th>
+                    <th>الكمية</th>
+                    <th>السعر</th>
+                    <th>الإجمالي</th>
+                </tr>
+            </thead>
+            <tbody id="invoice-template-items-body"></tbody>
+        </table>
+
+        <!-- الإجمالي -->
+        <div class="invoice-template__totals">
+            <div class="invoice-template__subtotal-row" id="invoice-template-subtotal-row" hidden>
+                <span>المجموع الفرعي:</span>
+                <span id="invoice-template-subtotal"></span>
+            </div>
+            <div class="invoice-template__delivery-row" id="invoice-template-delivery-row" hidden>
+                <span>تكلفة التوصيل:</span>
+                <span id="invoice-template-delivery-cost"></span>
+            </div>
+            <div class="invoice-template__grand-total-row">
+                <span>الإجمالي:</span>
+                <span id="invoice-template-grand-total"></span>
+            </div>
+        </div>
+
+        <!-- رسالة الشكر -->
+        <div class="invoice-template__thank-you" id="invoice-template-thank-you"></div>
+    </div>
 </body>
 </html>

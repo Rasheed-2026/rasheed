@@ -150,7 +150,6 @@
         // إدخال عناصر الطلب
         var itemsToInsert = preparedItems.map(function (item) {
             item.order_id = orderId;
-            item.user_id = userId;
             return item;
         });
 
@@ -258,11 +257,9 @@
             .eq('order_id', id);
 
         // إدخال العناصر الجديدة
-        var userId = await getCurrentUserId();
         var newItems = items.map(function (item) {
             return {
                 order_id: id,
-                user_id: userId,
                 recipe_id: item.recipeId || null,
                 recipe_name: item.recipeName,
                 quantity: item.quantity,
