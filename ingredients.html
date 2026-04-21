@@ -29,7 +29,21 @@
                     <a href="orders.html" class="nav-link">الطلبات</a>
                 </div>
             </nav>
-            <button id="logout-btn" class="btn btn--logout">تسجيل الخروج</button>
+            <!-- رابط حسابي للجوال فقط (يظهر قبل تسجيل الخروج) -->
+            <a href="account.html" class="nav-link nav-link--account-mobile">حسابي</a>
+
+            <!-- قائمة الحساب المنسدلة (ديسكتوب فقط) -->
+            <div class="account-dropdown" id="account-dropdown">
+                <button class="account-dropdown__trigger" id="account-dropdown-btn"
+                        aria-haspopup="true" aria-expanded="false" aria-label="قائمة الحساب">
+                    <span class="account-dropdown__icon" aria-hidden="true">👤</span>
+                    <span class="account-dropdown__arrow" aria-hidden="true">▾</span>
+                </button>
+                <div class="account-dropdown__menu" id="account-dropdown-menu" hidden>
+                    <a href="account.html" class="account-dropdown__item">حسابي</a>
+                    <button type="button" id="logout-btn" class="account-dropdown__item account-dropdown__item--logout">تسجيل الخروج</button>
+                </div>
+            </div>
         </div>
     </header>
 
@@ -125,6 +139,7 @@
     <script src="js/supabase-client.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/auth-guard.js"></script>
+    <script src="js/account-dropdown.js"></script>
     <!-- ترتيب مهم: ingredients.js يجي أول عشان main.js يقدر يستخدم دواله -->
     <script src="js/ingredients.js"></script>
     <script src="js/main.js"></script>
