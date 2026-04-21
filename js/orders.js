@@ -22,6 +22,7 @@
         if (!row) return null;
         return {
             id: row.id,
+            invoiceNumber: row.invoice_number != null ? Number(row.invoice_number) : null,
             customerId: row.customer_id,
             deliveryMethod: row.delivery_method,
             deliveryDate: row.delivery_date,

@@ -854,7 +854,10 @@
             header.hidden = !showHeader;
 
             // رقم الفاتورة + التاريخ
-            var invNumber = 'INV-' + String(order.id).padStart(4, '0');
+            // نستخدم الرقم التسلسلي لكل مستخدم (invoice_number) بدل UUID
+            // fallback للـ id في حال وصفة قديمة ما عندها invoice_number
+            var invNumberSource = order.invoiceNumber != null ? order.invoiceNumber : order.id;
+            var invNumber = 'INV-' + String(invNumberSource).padStart(4, '0');
             document.getElementById('invoice-template-number').textContent = invNumber;
 
             var orderDate = order.deliveryDate || order.createdAt;
